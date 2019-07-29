@@ -51,7 +51,6 @@ class FileEnumerationTask implements Runnable{
 	
 	public void enumerate(File directory) throws InterruptedException{
 		File[] files = directory.listFiles();
-		//���ļ��ӽ�����
 		for(File file : files){
 			if (file.isDirectory()) {
 				enumerate(file);
