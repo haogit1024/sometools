@@ -1,10 +1,16 @@
 package com.czh.util.database.old;
 
 
+import com.czh.util.database.entity.Field;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 数据库搜索工具数据库操作逻辑类 TODO 移植到新的类和完成读取文件操作
+ * @author czh
+ */
 public class Searcher {
 //    public static String URL = "jdbc:mysql://localhost:3306/czh?useSSL=false";
 //public static String username = "root";
@@ -19,9 +25,13 @@ public class Searcher {
     private static ResultSet resultSet;
     public static String database = "yct_server_bak";
 
+    // 查询字段信息sql
+    // select * from information_schema.COLUMNS where table_name = 'pay_order' and table_schema = 'cy_pay';
+
 
     {
         try {
+            // 检查jvm加载的类，Class.forName返回一个类
             Class.forName(driver);
             conn = DriverManager.getConnection(URL, username, password);
         } catch (SQLException e) {
@@ -58,6 +68,26 @@ public class Searcher {
         while (resultSet.next()) {
             String fieldName = resultSet.getString(1);
             fields.add(fieldName);
+        }
+        return fields;
+    }
+
+    /**
+     * 查询表所有字段信息 TODO 移植到新的类
+     * @param tableName 表名
+     * @param database  数据库名
+     * @return list
+     * @throws SQLException
+     */
+    public List<Field> getFieldForTable(String tableName, String database) throws SQLException {
+        String sql = "select * from information_schema.COLUMNS where table_name = '" + tableName
+                + "' and table_schema = '" + database + "'";
+        PreparedStatement ps = conn.prepareStatement(sql);
+        ResultSet resultSet = ps.executeQuery();
+        List<Field> fields = new ArrayList<>();
+        while (resultSet.next()) {
+            // TODO 解析结果集，生产Field
+
         }
         return fields;
     }

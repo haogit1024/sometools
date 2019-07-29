@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 
+/**
+ * 数据库搜索工具的操作逻辑 TODO 移植到新的类
+ * @author czh
+ */
 public class DatabaseSearchLaunch {
     private static int MAX_THREAD_NUM = 16;
     public static void main(String[] args) throws SQLException {

@@ -5,6 +5,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
+/**
+ * 保存表信息
+ * @author czh
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,4 +21,6 @@ public class Table {
     private String autoIncrement;
     private String charset;
     private String comment;
+
+    private List<Field> fieldList;
 }
