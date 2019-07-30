@@ -19,7 +19,8 @@ public class DatabaseSearchLaunch {
     }
 
     private static void setConnPar(Scanner in) {
-        System.out.println("1 简单模式(代码数据库配置信息)  2 复杂模式(输入数据库配置信息)");
+        // TODO 修复这个失效操作
+        System.out.println("1 简单模式(代码数据库配置信息)  2 复杂模式(输入数据库配置信息, 暂时失效)");
         String typeCommand = in.nextLine();
         if (typeCommand.equals("1")) {
 //            System.out.println("请输入数据库名");
@@ -39,8 +40,8 @@ public class DatabaseSearchLaunch {
             String password = in.nextLine();
 
             Searcher.URL = "jdbc:mysql://" + ip + ":" + port + "/" + databaseName + "?useSSL=false";
-            Searcher.username = user;
-            Searcher.password = password;
+            Searcher.USERNAME = user;
+            Searcher.PASSWORD = password;
         } else if (typeCommand.equals("-1")) {
             System.out.println("退出系统");
         } else {
@@ -88,7 +89,7 @@ public class DatabaseSearchLaunch {
         for (String tableName : tableNames) {
             tableIndex++;
 //            System.out.println("------table name = " + tableName + " index = " + tableIndex++);
-            List<String> fields = searcher.getFieldsByTableName(tableName, Searcher.database);
+            List<String> fields = searcher.getFieldsByTableName(tableName, Searcher.DATABASE);
             if (fields.size() == 0) {
                 System.out.printf("table: %s , field size : %d, index: %d \n", tableName, fields.size(), tableIndex);
                 continue;

@@ -2,7 +2,9 @@ package com.czh.util.database.old;
 
 
 import com.czh.util.database.entity.Field;
+import com.czh.util.util.PropertiesLoader;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,28 +14,41 @@ import java.util.List;
  * @author czh
  */
 public class Searcher {
-//    public static String URL = "jdbc:mysql://localhost:3306/czh?useSSL=false";
-//public static String username = "root";
-//    public static String password = "root";
-    // TODO 再配置文件读入设置
-    public static String URL = "jdbc:mysql://localhost:3306/czh?useSSL=false";
-    public static String username = "root";
-    public static String password = "root%df";
-    private static String driver = "com.mysql.jdbc.Driver";
-    private static Connection conn;
+
+    public static String URL = "jdbc:mysql://localhost:3306/czh?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
+    public static String USERNAME = "root";
+    public static String PASSWORD = "root%df";
+    private static String DRIVER = "com.mysql.jdbc.Driver";
+    private static String HOST = "";
+    private static String PORT = "";
+    private static Connection CONN;
     private static PreparedStatement pst;
     private static ResultSet resultSet;
-    public static String database = "yct_server_bak";
+    public static String DATABASE = "yct_server_bak";
 
     // 查询字段信息sql
     // select * from information_schema.COLUMNS where table_name = 'pay_order' and table_schema = 'cy_pay';
 
-
     {
         try {
+            PropertiesLoader propertiesLoader = new PropertiesLoader("db.properties");
+            USERNAME = propertiesLoader.getProperty("username");
+            PASSWORD = propertiesLoader.getProperty("password");
+            DRIVER = propertiesLoader.getProperty("driver");
+            HOST = propertiesLoader.getProperty("host");
+            PORT = propertiesLoader.getProperty("port");
+            DATABASE = propertiesLoader.getProperty("database");
+//            URL = "jdbc:mysql://"+ HOST +":"+ PORT +"/"+ DATABASE +"?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
+            System.out.println(URL);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("加载配置文件出错");
+        }
+
+        try {
             // 检查jvm加载的类，Class.forName返回一个类
-            Class.forName(driver);
-            conn = DriverManager.getConnection(URL, username, password);
+            Class.forName(DRIVER);
+            CONN = DriverManager.getConnection(URL, USERNAME, PASSWORD);
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("链接数据库出错，请检查数据库相关信息");
@@ -50,7 +65,7 @@ public class Searcher {
      */
     public List<String> getTableNames() throws SQLException{
         String sql = "show tables";
-        pst = conn.prepareStatement(sql);
+        pst = CONN.prepareStatement(sql);
         resultSet = pst.executeQuery();
         List<String> tableNames = new ArrayList<>();
         while (resultSet.next()) {
@@ -62,7 +77,7 @@ public class Searcher {
     public List<String> getFieldsByTableName(String tableName, String database) throws SQLException {
         String sql = "select COLUMN_NAME from information_schema.COLUMNS where table_name = '" + tableName
                 + "' and table_schema = '" + database + "'";
-        PreparedStatement ps = conn.prepareStatement(sql);
+        PreparedStatement ps = CONN.prepareStatement(sql);
         ResultSet resultSet = ps.executeQuery();
         List<String> fields = new ArrayList<>();
         while (resultSet.next()) {
@@ -82,7 +97,7 @@ public class Searcher {
     public List<Field> getFieldForTable(String tableName, String database) throws SQLException {
         String sql = "select * from information_schema.COLUMNS where table_name = '" + tableName
                 + "' and table_schema = '" + database + "'";
-        PreparedStatement ps = conn.prepareStatement(sql);
+        PreparedStatement ps = CONN.prepareStatement(sql);
         ResultSet resultSet = ps.executeQuery();
         List<Field> fields = new ArrayList<>();
         while (resultSet.next()) {
@@ -101,7 +116,7 @@ public class Searcher {
      */
     public void searchFieldForTableName(String tableName, String content) throws SQLException {
         String sql = "select COLUMN_NAME from information_schema.COLUMNS where table_name = '" + tableName + "'";
-        PreparedStatement ps = conn.prepareStatement(sql);
+        PreparedStatement ps = CONN.prepareStatement(sql);
         ResultSet resultSet = ps.executeQuery();
         while (resultSet.next()) {
             Object fieldName = resultSet.getObject(1);
@@ -114,7 +129,7 @@ public class Searcher {
     public void searchContentByTableName(String tableName, String firstField, String field, String content) {
         String sql = "select count(*) from " + tableName + " where `" + field + "` like '%" + content + "%'";
         try {
-            PreparedStatement ps = conn.prepareStatement(sql);
+            PreparedStatement ps = CONN.prepareStatement(sql);
             ResultSet resultSet = ps.executeQuery();
             if (resultSet.next()) {
                 int length = resultSet.getInt(1);
@@ -143,7 +158,7 @@ public class Searcher {
     private void searchContentByTableName(String tableName, String firstField, String field,String content, int offset, int limit, int length) throws SQLException {
         String sql = "select " + firstField + "," +field + " from " + tableName + " where " + field + " like '%" + content +
                 "%'" + " limit " + offset + " , " + limit;
-        PreparedStatement ps = conn.prepareStatement(sql);
+        PreparedStatement ps = CONN.prepareStatement(sql);
         ResultSet resultSet = ps.executeQuery();
         ResultSetMetaData metaData = resultSet.getMetaData();
         while (resultSet.next()) {
