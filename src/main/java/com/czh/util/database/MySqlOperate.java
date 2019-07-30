@@ -81,10 +81,10 @@ public class MySqlOperate {
      * @return
      */
     public Table getTable(String tableName) {
+        String sql = "select * from information_schema.TABLES where table_name = '" + tableName
+                + "' and table_schema = '" + database + "'";
         try {
             Table table = new Table();
-            String sql = "select * from information_schema.TABLES where table_name = '" + tableName
-                    + "' and table_schema = '" + database + "'";
             PreparedStatement ps = connection.prepareStatement(sql);
             ResultSet resultSet = ps.executeQuery();
             // TODO 解析结果集
@@ -92,7 +92,7 @@ public class MySqlOperate {
             table.setFieldList(this.getFields(tableName));
             return table;
         } catch (SQLException e) {
-            System.err.println("getTableByName sql error");
+            System.err.println("getTable sql error. sql: " + sql);
             return null;
         }
     }
@@ -126,7 +126,16 @@ public class MySqlOperate {
         return tables;
     }
 
-    public List<Map<String, Object>> getData(String tableName, int off, int let) {
-        return null;
+    public List<Map<String, Object>> getData(String tableName, int off, int len) {
+        String sql = "select * from `" + tableName + "` LIMIT " + off + ", " + len ;
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ResultSet resultSet = ps.executeQuery();
+            // TODO 解析结果集
+            return null;
+        } catch (SQLException e) {
+            System.err.println("getData sql error. sql: " + sql);
+            return new ArrayList<>(0);
+        }
     }
 }

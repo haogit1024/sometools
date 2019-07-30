@@ -7,7 +7,7 @@
     <groupId>com.czh</groupId>
     <artifactId>sometools</artifactId>
     <version>1.0</version>
-<!--    <packaging>jar</packaging>-->
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
