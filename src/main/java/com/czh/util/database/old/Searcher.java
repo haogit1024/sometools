@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class Searcher {
 
-    public static String URL = "jdbc:mysql://localhost:3306/czh?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
+    public static String URL = "jdbc:mysql://localhost:3306/czh?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&serverTimezone=UTC";
     public static String USERNAME = "root";
     public static String PASSWORD = "root%df";
     private static String DRIVER = "com.mysql.jdbc.Driver";
@@ -38,7 +38,7 @@ public class Searcher {
             HOST = propertiesLoader.getProperty("host");
             PORT = propertiesLoader.getProperty("port");
             DATABASE = propertiesLoader.getProperty("database");
-//            URL = "jdbc:mysql://"+ HOST +":"+ PORT +"/"+ DATABASE +"?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false";
+            URL = "jdbc:mysql://"+ HOST +":"+ PORT +"/"+ DATABASE +"?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&serverTimezone=UTC";
             System.out.println(URL);
         } catch (IOException e) {
             e.printStackTrace();
@@ -52,9 +52,11 @@ public class Searcher {
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("链接数据库出错，请检查数据库相关信息");
+            System.exit(0);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             System.out.println("未找到mysql驱动");
+            System.exit(0);
         }
     }
 
