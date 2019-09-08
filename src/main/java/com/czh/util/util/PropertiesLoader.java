@@ -4,7 +4,10 @@ import com.sun.istack.internal.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.Map.Entry;
 
 public class PropertiesLoader {
     private Properties properties;
@@ -18,10 +21,14 @@ public class PropertiesLoader {
     public String getProperty(String key) {
         return properties.getProperty(key);
     }
+    
+    public void display() {
+    	Set<Map.Entry<Object, Object>> set = properties.entrySet();
+    	set.forEach(entry -> System.out.printf("key: %s, val: %s \n", entry.getKey(), entry.getValue()));
+    }
 
     public static void main(String[] args) throws IOException {
         PropertiesLoader propertiesLoader = new PropertiesLoader("db.properties");
-        System.out.println(propertiesLoader.getProperty("username"));
-        System.out.println(propertiesLoader.getProperty("password"));
+        propertiesLoader.display();
     }
 }
