@@ -1,19 +1,35 @@
 package com.czh.util.util;
 
 import com.sun.istack.internal.NotNull;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Map.Entry;
+import java.util.*;
 
+/**
+ * @author czh
+ */
 public class PropertiesLoader {
     private Properties properties;
-    public PropertiesLoader(@NotNull String fileName) throws IOException {
-        assert (fileName != null && !"".equals(fileName)) : "读取的配置文件名不能为空";
-        InputStream inputStream = PropertiesLoader.class.getResourceAsStream("/" + fileName);
+
+    /**
+     * 根据一个路径初始化，可以是resource的相对路径和绝对路径
+     * @param filePath
+     * @throws IOException
+     */
+    public PropertiesLoader(@NotNull String filePath) throws IOException {
+        assert (StringUtils.isBlank(filePath)) : "读取的配置文件路径不能为空";
+        InputStream inputStream;
+        if (filePath.contains(File.separator)) {
+            // 绝对路径
+            inputStream = new FileInputStream(filePath);
+        } else {
+            // resource下的相对路径
+            inputStream = PropertiesLoader.class.getResourceAsStream("/" + filePath);;
+        }
         properties = new Properties();
         properties.load(inputStream);
     }
@@ -28,7 +44,9 @@ public class PropertiesLoader {
     }
 
     public static void main(String[] args) throws IOException {
-        PropertiesLoader propertiesLoader = new PropertiesLoader("db.properties");
+        PropertiesLoader propertiesLoader = new PropertiesLoader("D:\\czhcode\\github\\java\\simple\\new_util\\src\\main\\resources\\db.properties");
         propertiesLoader.display();
+        List<String> testList = new ArrayList<>(1);
+        System.out.println(testList.size());
     }
 }
