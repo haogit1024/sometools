@@ -140,7 +140,9 @@ public class DatabaseUtil {
 	private ResultSet executeSql(String sql) {
 		try {
 			PreparedStatement pst =  this.connection.prepareStatement(sql);
-            return pst.executeQuery();
+            ResultSet set =  pst.executeQuery();
+            pst.close();
+            return set;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println("运行sql出错，sql: " + sql);
@@ -343,6 +345,19 @@ public class DatabaseUtil {
 			res.add(String.format("table: %s, firstField: %s, firstValue: %s. field: %s, value: %s", table, firstField
 					, list.get(0), field, list.get(1)));
 		});
+	}
+
+	/**
+	 * 关闭数据库连接
+	 */
+	public void close() {
+		if (this.connection != null) {
+			try {
+				this.connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public static void main(String[] args) {
