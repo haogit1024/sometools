@@ -31,6 +31,9 @@ public class DatabaseUtil {
 	/*=====性能模式：是否开启多线程=====*/
 	private boolean powerMode = false;
 	private final int cpuCount = Runtime.getRuntime().availableProcessors();
+	private final int threadCount = cpuCount;
+	private final List<Connection> connectionList = new ArrayList<Connection>(threadCount);
+	private int connListIndex = 0;
 
 	/**
 	 * 根据一个properties文件初始化，可以是resource的相对路径和绝对路径
@@ -49,7 +52,7 @@ public class DatabaseUtil {
 			this.password = loader.getProperty("password");
 			this.database = loader.getProperty("database");
 			this.driver = loader.getProperty("driver");
-			this.connent();
+			this.connection = this.connect();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.err.println("读取配置文件出错");
@@ -64,18 +67,18 @@ public class DatabaseUtil {
 		this.password = password;
 		this.database = database;
 		this.driver = driver;
-		this.connent();
+		this.connection = this.connect();
 	}
 
 	/**
-	 * 连接到mysql，一个示例只连接一次
+	 * 返回一个sql connection
 	 */
-	private void connent() {
+	private Connection connect() {
         String url = "jdbc:mysql://"+ this.host +":"+ this.port +"/"+ this.database
         		+"?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&serverTimezone=UTC";
         try {
             Class.forName(driver);
-            this.connection = DriverManager.getConnection(url, username, password);
+            return DriverManager.getConnection(url, username, password);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             System.err.println("数据库驱动没有找到");
@@ -85,16 +88,50 @@ public class DatabaseUtil {
             System.err.println("连接数据库出错，请检查数据相关参数");
             System.exit(0);
         }
+        return null;
 	}
 
 	public boolean isPowerMode() {
 		return powerMode;
 	}
 
+	/**
+	 * 设置是否开启性能模式。性能模式下创建数据库连接池，取消性能模式关闭连接池
+	 * @param powerMode
+	 */
 	public void setPowerMode(boolean powerMode) {
+		if (powerMode) {
+			for (int i = 0; i < threadCount; i++) {
+				this.connectionList.add(this.connect());
+			}
+		} else {
+			this.connectionList.forEach((conn) -> {
+				if (conn != null) {
+					try {
+						conn.close();
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+				}
+			});
+		}
 		this.powerMode = powerMode;
 	}
-
+	
+	private Connection getConnection() {
+		Connection res; 
+		if (isPowerMode()) {
+			res = this.connectionList.get(connListIndex);
+			this.connListIndex++;
+			if (this.connListIndex == this.connectionList.size()) {
+				this.connListIndex = 0;
+			}
+		} else {
+			res = this.connection;
+		}
+		return res;
+	}
+	
 	/**
 	 * 执行一条sql，并返回一个ResultSet结果集
 	 * @param sql sql command
@@ -103,6 +140,22 @@ public class DatabaseUtil {
 	private ResultSet executeSql(String sql) {
 		try {
 			PreparedStatement pst =  this.connection.prepareStatement(sql);
+            return pst.executeQuery();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("运行sql出错，sql: " + sql);
+			return null;
+		}
+	}
+	
+	/**
+	 * 执行一条sql，并返回一个ResultSet结果集。符合开闭原则，新添加性能模式，不影响原来的使用
+	 * @param sql sql command
+	 * @return
+	 */
+	private ResultSet powerExecuteSql(String sql) {
+		try {
+			PreparedStatement pst =  this.getConnection().prepareStatement(sql);
             return pst.executeQuery();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -125,6 +178,7 @@ public class DatabaseUtil {
 			while (resultSet.next()) {
 				res.add(resultSet.getString(1));
 			}
+			resultSet.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println("reduceList出错");
@@ -152,6 +206,7 @@ public class DatabaseUtil {
 				}
 				res.add(list);
 			}
+			resultSet.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println("reduceList出错");
@@ -179,6 +234,7 @@ public class DatabaseUtil {
 				}
 				res.add(map);
 			}
+			resultSet.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println("reduceMaps出错");
@@ -280,7 +336,7 @@ public class DatabaseUtil {
 		String sql = "select `%s`, `%s` from `%s` where `%s` like ";
 		sql = String.format(sql, firstField, field, table, field);
 		sql += " '%" + content + "%'";
-		ResultSet resultSet = this.executeSql(sql);
+		ResultSet resultSet = this.powerExecuteSql(sql);
 		List<List<String>> resLists = this.reduceList(resultSet);
 		resLists.forEach((list) -> {
 			//"table: %s, firstField: %s, firstValue: %s. field: %s, value: %s"
