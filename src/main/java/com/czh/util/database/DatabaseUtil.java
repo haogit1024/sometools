@@ -36,7 +36,7 @@ public class DatabaseUtil {
 	private boolean powerMode = false;
 	private final int cpuCount = Runtime.getRuntime().availableProcessors();
 	/*=======性能模式下的线程数量=======*/
-	private final int threadCount = cpuCount;
+	private final int threadCount = cpuCount * 2;
 	/*=====性能模式下的数据库连接池=====*/
 	List<Connection> connectionList = new ArrayList<>(threadCount);
 	/*=======数据库连接池索引=======*/
@@ -108,10 +108,12 @@ public class DatabaseUtil {
 	 */
 	public void setPowerMode(boolean powerMode) {
 		if (powerMode) {
+			// 开启性能模式，创建数据库连接池
 			for (int i = 0; i < threadCount; i++) {
 				this.connectionList.add(this.connect());
 			}
 		} else {
+			// 关闭性能模式，关闭连接池
 			this.connectionList.forEach((conn) -> {
 				if (conn != null) {
 					try {
@@ -121,11 +123,12 @@ public class DatabaseUtil {
 					}
 				}
 			});
+			connectionList = new ArrayList<>(threadCount);
 		}
 		this.powerMode = powerMode;
 	}
 	
-	private Connection getConnection() {
+	private synchronized Connection getConnection() {
 		Connection res; 
 		if (isPowerMode()) {
 			res = this.connectionList.get(connListIndex);
@@ -381,8 +384,8 @@ public class DatabaseUtil {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-		DatabaseUtil databaseUtil = new DatabaseUtil("db.properties");
-//		List<String> res = databaseUtil.getTables();
+		DatabaseUtil databaseUtil = new DatabaseUtil("db.");
+//		List<String> res = databaseUtil.getTables();properties
 		databaseUtil.setPowerMode(true);
 		long start = System.currentTimeMillis();
 		List<String> res = databaseUtil.searchValueContent("18813365177");
@@ -390,6 +393,10 @@ public class DatabaseUtil {
 //		List<String> res = databaseUtil.searchFieldContent("id");
 //		res.forEach(System.out::println);
 //		System.out.println(Runtime.getRuntime().availableProcessors());
+		/*for (int i = 0; i < 10; i++) {
+			System.out.println("i = " + i);
+			databaseUtil.getConnection();
+		}*/
 	}
 
 }
