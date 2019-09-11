@@ -325,8 +325,13 @@ public class DatabaseUtil {
 	 * 关闭数据库连接
 	 */
 	public void close() {
+		if (isPowerMode()) {
+			// 关闭性能模式，关闭线程池的连接
+			this.setPowerMode(false);
+		}
 		if (this.connection != null) {
 			try {
+				// 关闭初始化的连接
 				this.connection.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
