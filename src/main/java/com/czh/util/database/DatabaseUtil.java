@@ -118,12 +118,12 @@ public class DatabaseUtil {
 		} else {
 			// 关闭性能模式，关闭连接池
 			this.connectionList.forEach((conn) -> {
-				if (conn != null) {
-					try {
+				try {
+					if (conn != null && !conn.isClosed()) {
 						conn.close();
-					} catch (SQLException e) {
-						e.printStackTrace();
 					}
+				} catch (SQLException e) {
+					e.printStackTrace();
 				}
 			});
 			connectionList = new ArrayList<>(threadCount);
