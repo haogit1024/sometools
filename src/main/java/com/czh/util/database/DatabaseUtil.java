@@ -1,5 +1,6 @@
 package com.czh.util.database;
 
+import cn.hutool.db.sql.SqlExecutor;
 import com.czh.util.util.PropertiesLoader;
 import org.apache.commons.lang3.StringUtils;
 
@@ -9,6 +10,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author czh
@@ -31,8 +35,11 @@ public class DatabaseUtil {
 	/*=====性能模式：是否开启多线程=====*/
 	private boolean powerMode = false;
 	private final int cpuCount = Runtime.getRuntime().availableProcessors();
+	/*=======性能模式下的线程数量=======*/
 	private final int threadCount = cpuCount;
-	private final List<Connection> connectionList = new ArrayList<Connection>(threadCount);
+	/*=====性能模式下的数据库连接池=====*/
+	List<Connection> connectionList = new ArrayList<>(threadCount);
+	/*=======数据库连接池索引=======*/
 	private int connListIndex = 0;
 
 	/**
@@ -131,7 +138,7 @@ public class DatabaseUtil {
 		}
 		return res;
 	}
-	
+
 	/**
 	 * 执行一条sql，并返回一个ResultSet结果集
 	 * @param sql sql command
@@ -140,12 +147,11 @@ public class DatabaseUtil {
 	private ResultSet executeSql(String sql) {
 		try {
 			PreparedStatement pst =  this.connection.prepareStatement(sql);
-            ResultSet set =  pst.executeQuery();
-            pst.close();
-            return set;
+			return pst.executeQuery();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println("运行sql出错，sql: " + sql);
+			System.exit(0);
 			return null;
 		}
 	}
@@ -184,6 +190,7 @@ public class DatabaseUtil {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println("reduceList出错");
+			System.exit(0);
 		}
 		return res;
 	}
@@ -293,10 +300,12 @@ public class DatabaseUtil {
 	 * @param content 需要查找的内容
 	 * @return List
 	 */
-	public List<String> searchValueContent(String content) {
+	public List<String> searchValueContent(String content) throws InterruptedException {
 		if (isPowerMode()) {
+			System.out.println("多线程");
 			return this.multiSearchValueContent(content);
 		} else {
+			System.out.println("单线程");
 			return this.simpleSearchValueContent(content);
 		}
 	}
@@ -321,10 +330,21 @@ public class DatabaseUtil {
 	 * @param content 需要查找的内容
 	 * @return List
 	 */
-	private List<String> multiSearchValueContent(String content) {
+	private List<String> multiSearchValueContent(String content) throws InterruptedException {
+		List<String> res = new ArrayList<>();
 		List<String> tables = this.getTables();
-
-		return null;
+		ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+		tables.forEach((table) -> {
+			List<String> fields = this.listFields(table);
+			fields.forEach((field) -> {
+				executor.submit(() -> {
+					this.searchFieldValueTask(table, fields.get(0), field, content, res);
+				});
+			});
+		});
+		executor.shutdown();
+		executor.awaitTermination(5, TimeUnit.MINUTES);
+		return res;
 	}
 
 	/**
@@ -360,12 +380,16 @@ public class DatabaseUtil {
 		}
 	}
 
-	public static void main(String[] args) {
-//		DatabaseUtil databaseUtil = new DatabaseUtil("db.properties");
-//		List<String> res = databaseUtil.searchValueContent("18813365177");
+	public static void main(String[] args) throws InterruptedException {
+		DatabaseUtil databaseUtil = new DatabaseUtil("db.properties");
+//		List<String> res = databaseUtil.getTables();
+		databaseUtil.setPowerMode(true);
+		long start = System.currentTimeMillis();
+		List<String> res = databaseUtil.searchValueContent("18813365177");
+		System.out.println((System.currentTimeMillis() - start));
 //		List<String> res = databaseUtil.searchFieldContent("id");
 //		res.forEach(System.out::println);
-		System.out.println(Runtime.getRuntime().availableProcessors());
+//		System.out.println(Runtime.getRuntime().availableProcessors());
 	}
 
 }
