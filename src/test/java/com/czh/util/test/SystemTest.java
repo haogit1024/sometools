@@ -9,6 +9,5 @@ import org.junit.Test;
 public class SystemTest {
     @Test
     public void testClassPath() {
-        // TODO 测试读取resuorce文件的资源
     }
 }

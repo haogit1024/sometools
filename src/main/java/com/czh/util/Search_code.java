@@ -32,19 +32,16 @@ class FileEnumerationTask implements Runnable{
 	private File startingDirectory;
 	
 	public FileEnumerationTask(BlockingQueue<File> queue, File startingDirecotry) {
-		// TODO Auto-generated constructor stub
 		this.queue = queue;
 		this.startingDirectory = startingDirecotry;
 	}
 	
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
 		try {
 			enumerate(startingDirectory);
 			queue.put(DUMMY);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -72,7 +69,6 @@ class SearchTask implements Runnable{
 	
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
 		boolean done = false;
 		while(!done){
 			File file;
@@ -85,10 +81,8 @@ class SearchTask implements Runnable{
 					search(file);
 				}
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

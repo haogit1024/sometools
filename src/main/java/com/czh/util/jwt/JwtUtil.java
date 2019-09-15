@@ -1,7 +1,5 @@
 package com.czh.util.jwt;
 
-import io.jsonwebtoken.Claims;
-
 import java.util.Date;
 import java.util.Map;
 
@@ -18,11 +16,6 @@ public class JwtUtil {
     }
 
     private Date getExpirationDateFromToken(String token) {
-        return null;
-    }
-
-    // TODO 弃用
-    private Claims getClaimsFromToken(String token) {
         return null;
     }
 
