@@ -47,15 +47,15 @@ public class Database {
 
 	/**
 	 * 根据一个properties文件初始化，可以是resource的相对路径和绝对路径
-	 * @param propertiesFilePath
+	 * @param propertiesPath
 	 */
-	public Database(String propertiesFilePath) {
-		if (StringUtils.isBlank(propertiesFilePath)) {
+	public Database(String propertiesPath) {
+		if (StringUtils.isBlank(propertiesPath)) {
 			System.err.println("读取数据库配置信息文件不能为空");
 			System.exit(0);
 		}
 		try {
-			PropertiesLoader loader = new PropertiesLoader(propertiesFilePath);
+			PropertiesLoader loader = new PropertiesLoader(propertiesPath);
 			this.host = loader.getProperty("host");
 			this.port = loader.getProperty("port");
 			this.username = loader.getProperty("username");
@@ -239,12 +239,13 @@ public class Database {
 
 	/**
 	 * 获取表数据的insert sql语句
+	 * TODO 用Java8函数式编程重构
 	 * @param table   表名
 	 * @param start   开始索引 (从 0 开始)
 	 * @param offset  查找条数
 	 * @return
 	 */
-	public List<String> getDataForInsertSql(String table, int start, int offset) {
+	public List<String> getDataForInsertSqlList(String table, int start, int offset) {
 		List<String> res = new ArrayList<>(offset);
 		String sql = "select * from `%s` limit %d, %d";
 		sql = String.format(sql, table, start, offset);
@@ -257,6 +258,29 @@ public class Database {
 			res.add(insertSql);
 		}
 		return res;
+	}
+
+	/**
+	 * 获取表数据的insert sql语句
+	 * TODO 用Java8函数式编程重构
+	 * @param table   表名
+	 * @param start   开始索引 (从 0 开始)
+	 * @param offset  查找条数
+	 * @return
+	 */
+	public String getDataForInsertSqlString(String table, int start, int offset) {
+		StringBuilder res = new StringBuilder();
+		String sql = "select * from `%s` limit %d, %d";
+		sql = String.format(sql, table, start, offset);
+		List<List<String>> data = this.executeSql(sql).reduceList();
+		String baseInsertSql = "INSERT INTO `%s` VALUES(%s)";
+		// 遍历每一条行数据
+		for (List<String> row : data) {
+			String values = this.listToString(row);
+			String insertSql = String.format(baseInsertSql, table, values);
+			res.append(insertSql).append(System.getProperty("line.separator"));
+		}
+		return res.toString();
 	}
 
 	/**
@@ -294,12 +318,10 @@ public class Database {
 	 * @param content 需要查找的内容
 	 * @return List
 	 */
-	public List<String> searchValueContent(String content) throws InterruptedException {
+	public List<String> searchValueContent(String content) {
 		if (isPowerMode()) {
-			System.out.println("多线程");
 			return this.multiSearchValueContent(content);
 		} else {
-			System.out.println("单线程");
 			return this.simpleSearchValueContent(content);
 		}
 	}
@@ -324,7 +346,7 @@ public class Database {
 	 * @param content 需要查找的内容
 	 * @return List
 	 */
-	private List<String> multiSearchValueContent(String content) throws InterruptedException {
+	private List<String> multiSearchValueContent(String content)  {
 		List<String> res = new ArrayList<>();
 		List<String> tables = this.getTables();
 		ExecutorService executor = Executors.newFixedThreadPool(threadCount);
@@ -337,7 +359,13 @@ public class Database {
 			});
 		});
 		executor.shutdown();
-		executor.awaitTermination(5, TimeUnit.MINUTES);
+		try {
+			executor.awaitTermination(5, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			System.out.println("线程池执行错误");
+			System.exit(0);
+		}
 		return res;
 	}
 
@@ -411,7 +439,8 @@ public class Database {
 //		System.out.println(Runtime.getRuntime().availableProcessors());
 //		System.out.println(databaseUtil.getAllCount());
 //		databaseUtil.getTables().forEach(System.out::println);
-		database.getDataForInsertSql("lonely_user", 40, 100).forEach(System.out::println);
+		String sql = database.getDataForInsertSqlString("lonely_user", 0, 100);
+		System.out.println(sql);
 	}
 
 }
