@@ -1,13 +1,15 @@
 package com.czh.util;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Test {
 
 	public static void main(String[] args) {
-         Executors.newFixedThreadPool(5);
+	    String s = "fuck";
+         StringBuilder sb = new StringBuilder();
+        sb.append("\'").append(s).append("\'").append(",");
+        System.out.println(sb.toString());
 	}
 
 }

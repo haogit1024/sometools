@@ -1,4 +1,4 @@
-package com.czh.util.database;
+package com.czh.util.database.base;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * ResultSet解释器
  * @author czh
- *
+ * TODO 用Java8函数式方法重构
  */
 public class ResultSetParser {
 	private ResultSet resultSet;

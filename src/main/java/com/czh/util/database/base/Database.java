@@ -1,10 +1,8 @@
-package com.czh.util.database;
+package com.czh.util.database.base;
 
-import cn.hutool.db.sql.SqlExecutor;
 import com.czh.util.util.PropertiesLoader;
 import org.apache.commons.lang3.StringUtils;
 
-import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
@@ -18,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author czh
  */
-public class DatabaseUtil {
+public class Database {
 	/*========链接数据库参数========*/
 	private String host;
 	private String port;
@@ -32,8 +30,10 @@ public class DatabaseUtil {
 
 	/*=========数据库中所有的表========*/
 	private List<String> tables;
-	/*=======数据库中所有表的总条数======*/
+	/*======数据库中所有表的总条数======*/
 	private int allCount = -1;
+	/*==========每个表的记录数==========*/
+	private Map<String, Integer> tableCount;
 
 	/*=====性能模式：是否开启多线程=====*/
 	private boolean powerMode = false;
@@ -49,7 +49,7 @@ public class DatabaseUtil {
 	 * 根据一个properties文件初始化，可以是resource的相对路径和绝对路径
 	 * @param propertiesFilePath
 	 */
-	public DatabaseUtil(String propertiesFilePath) {
+	public Database(String propertiesFilePath) {
 		if (StringUtils.isBlank(propertiesFilePath)) {
 			System.err.println("读取数据库配置信息文件不能为空");
 			System.exit(0);
@@ -70,7 +70,7 @@ public class DatabaseUtil {
 		}
 	}
 
-	public DatabaseUtil(String host, String port, String username, String password, String database, String driver) {
+	public Database(String host, String port, String username, String password, String database, String driver) {
 		this.host = host;
 		this.port = port;
 		this.username = username;
@@ -198,26 +198,65 @@ public class DatabaseUtil {
 			int temp = 0;
 			List<String> tables = this.getTables();
 			for (String table : tables) {
-				String sql = "select COUNT(*) from `%s`";
-				sql = String.format(sql, table);
-				String count = this.executeSql(sql).reduceFirstLine().get(0);
-				temp += Integer.parseInt(count);
+				temp += this.getTableCount(table);
 			}
 			allCount = temp;
 		}
 		return allCount;
 	}
+
+	/**
+	 * 获取每个表中的记录数
+	 * @param table 表名
+	 * @return 记录数
+	 */
+	public int getTableCount(String table) {
+		if (tableCount == null) {
+			tableCount = new HashMap<>(this.getTables().size());
+		}
+		Integer count = tableCount.get(table);
+		if (count == null) {
+			String sql = "select COUNT(*) from `%s`";
+			sql = String.format(sql, table);
+			String realCount = this.executeSql(sql).reduceFirstLine().get(0);
+			count = Integer.parseInt(realCount);
+			tableCount.put(table, count);
+		}
+		return count;
+	}
 	
 	/**
 	 * 获取建表语句
 	 * @param table 表名
-	 * @return
+	 * @return 建表sql语句
 	 */
 	public String getCreateTableSql(String table) {
 		String sql = "show table `%s`";
 		sql = String.format(sql, table);
 		List<String> res = this.executeSql(sql).reduceFirstLine();
 		return res.get(1);
+	}
+
+	/**
+	 * 获取表数据的insert sql语句
+	 * @param table   表名
+	 * @param start   开始索引 (从 0 开始)
+	 * @param offset  查找条数
+	 * @return
+	 */
+	public List<String> getDataForInsertSql(String table, int start, int offset) {
+		List<String> res = new ArrayList<>(offset);
+		String sql = "select * from `%s` limit %d, %d";
+		sql = String.format(sql, table, start, offset);
+		List<List<String>> data = this.executeSql(sql).reduceList();
+		String baseInsertSql = "INSERT INTO `%s` VALUES(%s)";
+		// 遍历每一条行数据
+		for (List<String> row : data) {
+			String values = this.listToString(row);
+			String insertSql = String.format(baseInsertSql, table, values);
+			res.add(insertSql);
+		}
+		return res;
 	}
 
 	/**
@@ -322,6 +361,31 @@ public class DatabaseUtil {
 	}
 
 	/**
+	 * list 转 逗号分隔字符串
+	 * @param list 字符串列表
+	 * @return 逗号分隔字符串
+	 */
+	private String listToString(List<String> list) {
+		if (list == null || list.size() == 0) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		String separator = ", ";
+		for (String s : list) {
+			String baseItem;
+			if (s == null) {
+				baseItem = "%s" + separator;
+			} else {
+				baseItem = "\'%s\'" +separator;
+			}
+			String itemValue = String.format(baseItem, s);
+			sb.append(itemValue);
+		}
+		String res = sb.toString();
+		return res.substring(0, res.length() - separator.length());
+	}
+
+	/**
 	 * 关闭数据库连接
 	 */
 	public void close() {
@@ -335,21 +399,19 @@ public class DatabaseUtil {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-		DatabaseUtil databaseUtil = new DatabaseUtil("db.properties");
+		Database database = new Database("db.properties");
 //		List<String> res = databaseUtil.getTables();
-		databaseUtil.setPowerMode(true);
-		long start = System.currentTimeMillis();
-		List<String> res = databaseUtil.searchValueContent("czh");
-		System.out.println((System.currentTimeMillis() - start));
-		res.forEach(System.out::println);
+//		databaseUtil.setPowerMode(true);
+//		long start = System.currentTimeMillis();
+//		List<String> res = databaseUtil.searchValueContent("czh");
+//		System.out.println((System.currentTimeMillis() - start));
+//		res.forEach(System.out::println);
 //		List<String> res = databaseUtil.searchFieldContent("id");
 //		res.forEach(System.out::println);
 //		System.out.println(Runtime.getRuntime().availableProcessors());
-		/*for (int i = 0; i < 10; i++) {
-			System.out.println("i = " + i);
-			databaseUtil.getConnection();
-		}*/
 //		System.out.println(databaseUtil.getAllCount());
+//		databaseUtil.getTables().forEach(System.out::println);
+		database.getDataForInsertSql("lonely_user", 40, 100).forEach(System.out::println);
 	}
 
 }
