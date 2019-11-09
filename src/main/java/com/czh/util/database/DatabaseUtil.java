@@ -4,6 +4,7 @@ import cn.hutool.db.sql.SqlExecutor;
 import com.czh.util.util.PropertiesLoader;
 import org.apache.commons.lang3.StringUtils;
 
+import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
@@ -31,6 +32,8 @@ public class DatabaseUtil {
 
 	/*=========数据库中所有的表========*/
 	private List<String> tables;
+	/*=======数据库中所有表的总条数======*/
+	private int allCount = -1;
 
 	/*=====性能模式：是否开启多线程=====*/
 	private boolean powerMode = false;
@@ -147,10 +150,11 @@ public class DatabaseUtil {
 	 * @param sql sql command
 	 * @return 结果集
 	 */
-	private ResultSet executeSql(String sql) {
+	private ResultSetParser executeSql(String sql) {
 		try {
 			PreparedStatement pst =  this.connection.prepareStatement(sql);
-			return pst.executeQuery();
+			ResultSet resultSet = pst.executeQuery();
+			return new ResultSetParser(resultSet);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println("运行sql出错，sql: " + sql);
@@ -164,94 +168,17 @@ public class DatabaseUtil {
 	 * @param sql sql command
 	 * @return
 	 */
-	private ResultSet powerExecuteSql(String sql) {
+	private ResultSetParser powerExecuteSql(String sql) {
 		try {
 			PreparedStatement pst =  this.getConnection().prepareStatement(sql);
-            return pst.executeQuery();
+            ResultSet resultSet =  pst.executeQuery();
+            return  new ResultSetParser(resultSet);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println("运行sql出错，sql: " + sql);
+			System.exit(0);
 			return null;
 		}
-	}
-
-	/**
-	 * 解析结果集为一个List, 只读取结果集每一行的第一个元素
-	 * @param resultSet 执行sql返回的结果集
-	 * @return List
-	 */
-	private List<String> reduceFirstList(ResultSet resultSet) {
-		List<String> res = new ArrayList<String>();
-		try {
-			if (resultSet == null) {
-				return res;
-			}
-			while (resultSet.next()) {
-				res.add(resultSet.getString(1));
-			}
-			resultSet.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.err.println("reduceList出错");
-			System.exit(0);
-		}
-		return res;
-	}
-
-	/**
-	 * 将结果集解析为一个List<List> 结果集的每一行映射成一个List
-	 * @param resultSet sql执行后的结果集
-	 * @return List<List>
-	 */
-	private List<List<String>> reduceList(ResultSet resultSet) {
-		List<List<String>> res = new ArrayList<>();
-		try {
-			if (resultSet == null) {
-				return res;
-			}
-			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-			int columnCount = resultSetMetaData.getColumnCount();
-			while (resultSet.next()) {
-				List<String> list = new ArrayList<>(columnCount);
-				for (int i = 1; i <= columnCount ; i++) {
-					list.add(resultSet.getString(i));
-				}
-				res.add(list);
-			}
-			resultSet.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.err.println("reduceList出错");
-		}
-		return res;
-	}
-
-	/**
-	 * 将结果集解析为一个List<Map> 结果集的每一行映射成一个map
-	 * @param resultSet sql执行后的结果集
-	 * @return List<Map>
-	 */
-	private List<Map<String, String>> reduceMaps(ResultSet resultSet){
-		List<Map<String, String>> res = new ArrayList<Map<String,String>>();
-		try {
-			if (resultSet == null) {
-				return res;
-			}
-			ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
-			int columnCount = resultSetMetaData.getColumnCount();
-			while (resultSet.next()) {
-				Map<String, String> map = new HashMap<>(columnCount);
-				for (int i = 1; i <= columnCount; i++) {
-					map.put(resultSetMetaData.getColumnClassName(i), resultSet.getString(i));
-				}
-				res.add(map);
-			}
-			resultSet.close();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.err.println("reduceMaps出错");
-		}
-		return res;
 	}
 
 	/**
@@ -261,10 +188,36 @@ public class DatabaseUtil {
 	public List<String> getTables() {
 		if (tables == null || tables.size() == 0) {
 			String sql = "show tables";
-			ResultSet resultSet = this.executeSql(sql);
-			tables = this.reduceFirstList(resultSet);
+			tables = this.executeSql(sql).reduceFirstLine();
 		}
 		return tables;
+	}
+	
+	public int getAllCount() {
+		if (allCount == -1) {
+			int temp = 0;
+			List<String> tables = this.getTables();
+			for (String table : tables) {
+				String sql = "select COUNT(*) from `%s`";
+				sql = String.format(sql, table);
+				String count = this.executeSql(sql).reduceFirstLine().get(0);
+				temp += Integer.parseInt(count);
+			}
+			allCount = temp;
+		}
+		return allCount;
+	}
+	
+	/**
+	 * 获取建表语句
+	 * @param table 表名
+	 * @return
+	 */
+	public String getCreateTableSql(String table) {
+		String sql = "show table `%s`";
+		sql = String.format(sql, table);
+		List<String> res = this.executeSql(sql).reduceFirstLine();
+		return res.get(1);
 	}
 
 	/**
@@ -275,8 +228,7 @@ public class DatabaseUtil {
 	private List<String> listFields(String table) {
 		String sql = "select COLUMN_NAME from information_schema.COLUMNS where table_name = '%s' and table_schema = '%s'";
 		sql = String.format(sql, table, this.database);
-		ResultSet resultSet = this.executeSql(sql);
-		return this.reduceFirstList(resultSet);
+		return this.executeSql(sql).reduceFirstLine();
 	}
 
 	/**
@@ -361,8 +313,7 @@ public class DatabaseUtil {
 		String sql = "select `%s`, `%s` from `%s` where `%s` like ";
 		sql = String.format(sql, firstField, field, table, field);
 		sql += " '%" + content + "%'";
-		ResultSet resultSet = this.powerExecuteSql(sql);
-		List<List<String>> resLists = this.reduceList(resultSet);
+		List<List<String>> resLists = this.powerExecuteSql(sql).reduceList();
 		resLists.forEach((list) -> {
 			//"table: %s, firstField: %s, firstValue: %s. field: %s, value: %s"
 			res.add(String.format("table: %s, firstField: %s, firstValue: %s. field: %s, value: %s", table, firstField
@@ -384,12 +335,13 @@ public class DatabaseUtil {
 	}
 
 	public static void main(String[] args) throws InterruptedException {
-		DatabaseUtil databaseUtil = new DatabaseUtil("db.");
-//		List<String> res = databaseUtil.getTables();properties
+		DatabaseUtil databaseUtil = new DatabaseUtil("db.properties");
+//		List<String> res = databaseUtil.getTables();
 		databaseUtil.setPowerMode(true);
 		long start = System.currentTimeMillis();
-		List<String> res = databaseUtil.searchValueContent("18813365177");
+		List<String> res = databaseUtil.searchValueContent("czh");
 		System.out.println((System.currentTimeMillis() - start));
+		res.forEach(System.out::println);
 //		List<String> res = databaseUtil.searchFieldContent("id");
 //		res.forEach(System.out::println);
 //		System.out.println(Runtime.getRuntime().availableProcessors());
@@ -397,6 +349,7 @@ public class DatabaseUtil {
 			System.out.println("i = " + i);
 			databaseUtil.getConnection();
 		}*/
+//		System.out.println(databaseUtil.getAllCount());
 	}
 
 }
