@@ -10,9 +10,10 @@ import java.util.Scanner;
  * @author czh
  * 数据导出类
  */
-public class DbExport {
+public class DbSqlExportClient {
+	private static String exportDirPath = "C:\\Users\\czh\\Desktop\\作品";
     public static void main(String[] args) {
-        String exportDirPath = "C:\\Users\\czh\\Desktop\\作品";
+//        String exportDirPath = "C:\\Users\\czh\\Desktop\\作品";
         File exportDir = new File(exportDirPath);
         // 创建缓存文件夹
         if (!exportDir.exists()) {
@@ -40,9 +41,14 @@ public class DbExport {
 
     public static void saveMultiFile(Database db, List<String> tables, int allCount) {
         // TODO 实现
+    	
     }
 
     public static void saveOneFile(Database db, List<String> tables, int allCount) {
-        // TODO 实现
+    	String fileName = db.getDatabase() + ".sql";
+    	File sqlFile = new File(exportDirPath + fileName);
+        for (String table : tables) {
+            String createSql = db.getCreateTableSql(table);
+        }
     }
 }

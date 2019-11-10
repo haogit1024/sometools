@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author czh
+ * 该对象初始化(new)完成后, 所有的private 和 public 方法均可直接调用, 无需前置条件
  */
 public class Database {
 	/*========链接数据库参数========*/
@@ -34,6 +35,8 @@ public class Database {
 	private int allCount = -1;
 	/*==========每个表的记录数==========*/
 	private Map<String, Integer> tableCount;
+	/*===========数据库版本号===========*/
+	private String version;
 
 	/*=====性能模式：是否开启多线程=====*/
 	private boolean powerMode = false;
@@ -226,15 +229,43 @@ public class Database {
 	}
 	
 	/**
+	 * 获取数据库名
+	 * @return 数据库名
+	 */
+	public String getDatabase() {
+		return database;
+	}
+
+	/**
+	 * 获取链接地址
+	 * @return 数据库host
+	 */
+	public String getHost() {
+		return host;
+	}
+
+	/**
+	 * 获取数据库版本号
+	 * @return 数据库版本号
+	 */
+	public String getVersion() {
+		if (version == null) {
+			String sql = "select version()";
+			version = this.executeSql(sql).reduceFirstLine().get(0);
+		}
+		return version;
+	}
+
+	/**
 	 * 获取建表语句
 	 * @param table 表名
 	 * @return 建表sql语句
 	 */
 	public String getCreateTableSql(String table) {
-		String sql = "show table `%s`";
+		String sql = "show create table `%s`";
 		sql = String.format(sql, table);
-		List<String> res = this.executeSql(sql).reduceFirstLine();
-		return res.get(1);
+		List<List<String>> res = this.executeSql(sql).reduceList();
+		return res.get(0).get(1);
 	}
 
 	/**

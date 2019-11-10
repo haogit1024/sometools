@@ -1,15 +1,14 @@
 package com.czh.util;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Test {
 
 	public static void main(String[] args) {
-	    String s = "fuck";
-         StringBuilder sb = new StringBuilder();
-        sb.append("\'").append(s).append("\'").append(",");
-        System.out.println(sb.toString());
+		LocalDateTime now = LocalDateTime.now();
+		String date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+		System.out.println(date);
 	}
 
 }
