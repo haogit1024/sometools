@@ -431,11 +431,11 @@ public class Database {
 		StringBuilder sb = new StringBuilder();
 		String separator = ", ";
 		for (String s : list) {
-			// TODO s的单引号处理
 			String baseItem;
 			if (s == null) {
 				baseItem = "%s" + separator;
 			} else {
+				s = s.replace("\'", "\\\'");
 				baseItem = "\'%s\'" +separator;
 			}
 			String itemValue = String.format(baseItem, s);
