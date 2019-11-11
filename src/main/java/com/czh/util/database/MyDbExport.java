@@ -15,7 +15,12 @@ import java.util.List;
  */
 public class MyDbExport {
     private Database db;
-    private int saveCount = 100;
+    /**
+     * 一次读取的数据量
+     */
+    private final int saveCount = 5000;
+
+    private final String systemSeparator = System.getProperty("line.separator");
 
     public MyDbExport(String propertiesPath) {
         db = new Database(propertiesPath);
@@ -57,15 +62,17 @@ public class MyDbExport {
         fileUtil.append(dbHeaderDoc);
         List<String> tables = db.getTables();
         for (String table: tables) {
+            int tableCount = db.getTableCount(table);
+            System.out.printf("table: %s, count: %s \n", table, tableCount);
             String tableHeaderDoc = getTableHeaderDoc(table);
             String createTableSql = db.getCreateTableSql(table);
             String dataHeaderDoc = getDataHeaderDoc(table);
             // 写入表头部
             fileUtil.append(tableHeaderDoc);
             fileUtil.append(createTableSql);
+            fileUtil.append(systemSeparator);
             fileUtil.append(dataHeaderDoc);
             // 写入insert data
-            int tableCount = db.getTableCount(table);
             int start = 0;
             while (start < tableCount) {
                 String insertIntoSql = db.getDataForInsertSqlString(table, start, saveCount);
@@ -87,39 +94,45 @@ public class MyDbExport {
 
     private String getDbHeaderDoc() {
         String baseHeader = "/*\n" +
-                "Source Server Version : %s" + System.getProperty("line.separator") +
-                "Source Host           : %s" + System.getProperty("line.separator") +
-                "Source Database       : %s" + System.getProperty("line.separator") +
-                System.getProperty("line.separator") +
-                "Date: %s" + System.getProperty("line.separator") +
-                "*/" + System.getProperty("line.separator");
+                "Source Server Version : %s" + systemSeparator +
+                "Source Host           : %s" + systemSeparator +
+                "Source Database       : %s" + systemSeparator +
+                systemSeparator +
+                "Date: %s" + systemSeparator +
+                "*/" + systemSeparator;
         LocalDateTime now = LocalDateTime.now();
         String date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         String res =  String.format(baseHeader, db.getVersion(), db.getHost(), db.getDatabase(), date);
-        res += System.getProperty("line.separator") + "SET FOREIGN_KEY_CHECKS=0;";
+        res += systemSeparator + "SET FOREIGN_KEY_CHECKS=0;";
         return res;
     }
 
     private String getTableHeaderDoc(String table) {
-        String base = System.getProperty("line.separator") +
-                "-- ----------------------------" + System.getProperty("line.separator") +
-                "-- Table structure for %s" + System.getProperty("line.separator") +
-                "-- ----------------------------" + System.getProperty("line.separator");
+        String base = systemSeparator +
+                "-- ----------------------------" + systemSeparator +
+                "-- Table structure for %s" + systemSeparator +
+                "-- ----------------------------" + systemSeparator +
+                "DROP TABLE IF EXISTS `%s`;" + systemSeparator;
 
-        return String.format(base, table);
+        return String.format(base, table, table);
     }
 
     private String getDataHeaderDoc(String table) {
-        String base = System.getProperty("line.separator") +
-                "-- ----------------------------" + System.getProperty("line.separator") +
-                "-- Records of %s" + System.getProperty("line.separator") +
-                "-- ----------------------------" + System.getProperty("line.separator");
+        String base = systemSeparator +
+                "-- ----------------------------" + systemSeparator +
+                "-- Records of %s" + systemSeparator +
+                "-- ----------------------------" + systemSeparator;
         return String.format(base, table);
     }
 
     public static void main(String[] args) {
         MyDbExport myDbExport = new MyDbExport("db.properties");
-        String filePath = "C:\\Users\\czh\\Desktop\\作品\\test.sql";
+        String filePath = "C:\\Users\\admin\\Desktop\\logs\\test.sql";
+        long startTime = System.currentTimeMillis();
         myDbExport.exportOneFile(filePath);
+        long endTime = System.currentTimeMillis();
+        long useTime = endTime - startTime;
+        System.out.println("useTime: " + useTime);
+        // navicat 3.06  665793行  107,714kb
     }
 }

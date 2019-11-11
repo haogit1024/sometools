@@ -265,7 +265,7 @@ public class Database {
 		String sql = "show create table `%s`";
 		sql = String.format(sql, table);
 		List<List<String>> res = this.executeSql(sql).reduceList();
-		return res.get(0).get(1);
+		return res.get(0).get(1) + ";";
 	}
 
 	/**
@@ -304,7 +304,7 @@ public class Database {
 		String sql = "select * from `%s` limit %d, %d";
 		sql = String.format(sql, table, start, offset);
 		List<List<String>> data = this.executeSql(sql).reduceList();
-		String baseInsertSql = "INSERT INTO `%s` VALUES(%s)";
+		String baseInsertSql = "INSERT INTO `%s` VALUES(%s);";
 		// 遍历每一条行数据
 		for (List<String> row : data) {
 			String values = this.listToString(row);
@@ -431,6 +431,7 @@ public class Database {
 		StringBuilder sb = new StringBuilder();
 		String separator = ", ";
 		for (String s : list) {
+			// TODO s的单引号处理
 			String baseItem;
 			if (s == null) {
 				baseItem = "%s" + separator;

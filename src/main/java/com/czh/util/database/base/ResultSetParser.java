@@ -14,7 +14,7 @@ import java.util.Map;
  * TODO 用Java8函数式方法重构
  */
 public class ResultSetParser {
-	private ResultSet resultSet;
+	private final ResultSet resultSet;
 	
 	public ResultSetParser(ResultSet resultSet) {
 		this.resultSet = resultSet;
@@ -25,7 +25,7 @@ public class ResultSetParser {
 	 * @return List
 	 */
 	public List<String> reduceFirstLine() {
-		List<String> res = new ArrayList<String>();
+		List<String> res = new ArrayList<>();
 		try {
 			if (resultSet == null) {
 				return res;

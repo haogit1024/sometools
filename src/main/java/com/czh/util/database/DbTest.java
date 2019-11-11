@@ -1,11 +1,9 @@
 package com.czh.util.database;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-
 import com.czh.util.database.base.Database;
-import com.czh.util.database.base.FileUtil;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * @author czh
@@ -15,10 +13,10 @@ public class DbTest {
 	private static String exportDirPath = "C:\\Users\\czh\\Desktop\\作品";
     public static void main(String[] args) throws IOException {
         Database db = new Database("db.properties");
-        /*String sql = db.getCreateTableSql("lonely_user");
-        System.out.println(sql);
-        String insertSql = db.getDataForInsertSqlString("lonely_user", 0, 100);
-        System.out.println(insertSql);*/
-        System.out.println(db.getVersion());
+        List<String> tables = db.getTables();
+        System.out.println(tables.size());
+//        tables.forEach(System.out::println);
+        // app.info4  currency_code38
+//        System.out.println(db.getTableCount("app_info"));
     }
 }
