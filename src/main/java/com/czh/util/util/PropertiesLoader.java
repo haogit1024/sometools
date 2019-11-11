@@ -46,7 +46,5 @@ public class PropertiesLoader {
     public static void main(String[] args) throws IOException {
         PropertiesLoader propertiesLoader = new PropertiesLoader("D:\\czhcode\\github\\java\\simple\\new_util\\src\\main\\resources\\db.properties");
         propertiesLoader.display();
-        List<String> testList = new ArrayList<>(1);
-        System.out.println(testList.size());
     }
 }
