@@ -18,5 +18,6 @@ public class DbTest {
 //        tables.forEach(System.out::println);
         // app.info4  currency_code38
 //        System.out.println(db.getTableCount("app_info"));
+
     }
 }
