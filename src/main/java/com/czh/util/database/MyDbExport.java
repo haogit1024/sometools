@@ -3,11 +3,13 @@ package com.czh.util.database;
 import com.czh.util.database.base.Database;
 import com.czh.util.database.base.FileUtil;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author czh
@@ -62,34 +64,57 @@ public class MyDbExport {
         fileUtil.append(dbHeaderDoc);
         List<String> tables = db.getTables();
         for (String table: tables) {
-            int tableCount = db.getTableCount(table);
-            System.out.printf("table: %s, count: %s \n", table, tableCount);
-            String tableHeaderDoc = getTableHeaderDoc(table);
-            String createTableSql = db.getCreateTableSql(table);
-            String dataHeaderDoc = getDataHeaderDoc(table);
-            // 写入表头部
-            fileUtil.append(tableHeaderDoc);
-            fileUtil.append(createTableSql);
-            fileUtil.append(systemSeparator);
-            fileUtil.append(dataHeaderDoc);
-            // 写入insert data
-            int start = 0;
-            while (start < tableCount) {
-                String insertIntoSql = db.getDataForInsertSqlString(table, start, saveCount);
-                fileUtil.append(insertIntoSql);
-                start += saveCount;
-            }
+            writeTableSql(fileUtil, table);
+            tempCount += saveCount;
+            System.out.printf("进度: %d%% \n", tempCount / allCount );
         }
         fileUtil.close();
     }
 
-    public void exportMultiFile(String dirPath, String fileName) {
-        String filePath = dirPath + java.io.File.separator + fileName;
-        exportMultiFile(filePath);
+    public void exportMultiFile(String dirPath) {
+        db.setPowerMode(true);
+        ExecutorService executor = Executors.newFixedThreadPool(Database.threadCount);
+        List<String> tables = db.getTables();
+        tables.forEach(table -> executor.submit(() -> this.exportTableSql(dirPath, table)));
+        executor.shutdown();
+        try {
+            executor.awaitTermination(30, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            System.out.println("线程池等待出错");
+        }
     }
 
-    public void exportMultiFile(String filePath) {
+    private void exportTableSql(String dirPath, String table) {
+        System.out.printf("正在导出 %s 表数据, 总记录数: %d \n", table, db.getTableCount(table));
+        String fileName = table + ".sql";
+        try {
+            FileUtil fileUtil = new FileUtil(dirPath, fileName);
+            writeTableSql(fileUtil, table);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("创建");
+        }
+    }
 
+    private void writeTableSql(FileUtil fileUtil, String table) {
+        int tableCount = db.getTableCount(table);
+//            System.out.printf("table: %s, count: %s \n", table, tableCount);
+        String tableHeaderDoc = getTableHeaderDoc(table);
+        String createTableSql = db.getCreateTableSql(table);
+        String dataHeaderDoc = getDataHeaderDoc(table);
+        // 写入表头部
+        fileUtil.append(tableHeaderDoc);
+        fileUtil.append(createTableSql);
+        fileUtil.append(systemSeparator);
+        fileUtil.append(dataHeaderDoc);
+        // 写入insert data
+        int start = 0;
+        while (start < tableCount) {
+            String insertIntoSql = db.getDataForInsertSqlString(table, start, saveCount);
+            fileUtil.append(insertIntoSql);
+            start += saveCount;
+        }
     }
 
     private String getDbHeaderDoc() {
@@ -127,9 +152,10 @@ public class MyDbExport {
 
     public static void main(String[] args) {
         MyDbExport myDbExport = new MyDbExport("db.properties");
-        String filePath = "C:\\Users\\admin\\Desktop\\logs\\test.sql";
+        String filePath = "C:\\Users\\czh\\Desktop\\作品\\test.sql";
         long startTime = System.currentTimeMillis();
-        myDbExport.exportOneFile(filePath);
+//        myDbExport.exportOneFile(filePath);
+        myDbExport.exportMultiFile("C:\\Users\\czh\\Desktop\\作品\\test");
         long endTime = System.currentTimeMillis();
         long useTime = endTime - startTime;
         System.out.println("useTime: " + useTime);

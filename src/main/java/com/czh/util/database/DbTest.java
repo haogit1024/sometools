@@ -1,9 +1,8 @@
 package com.czh.util.database;
 
-import com.czh.util.database.base.Database;
+import com.czh.util.database.base.FileUtil;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * @author czh
@@ -12,12 +11,8 @@ import java.util.List;
 public class DbTest {
 	private static String exportDirPath = "C:\\Users\\czh\\Desktop\\作品";
     public static void main(String[] args) throws IOException {
-        Database db = new Database("db.properties");
-        List<String> tables = db.getTables();
-        System.out.println(tables.size());
-//        tables.forEach(System.out::println);
-        // app.info4  currency_code38
-//        System.out.println(db.getTableCount("app_info"));
-
+        FileUtil fileUtil = new FileUtil("C:\\Users\\czh\\Desktop\\作品", "fuck.sql");
+        fileUtil.append("hello sql");
+        fileUtil.close();
     }
 }
