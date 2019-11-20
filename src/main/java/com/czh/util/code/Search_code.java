@@ -1,4 +1,4 @@
-package com.czh.util;
+package com.czh.util.code;
 
 import java.io.File;
 import java.io.FileNotFoundException;

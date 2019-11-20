@@ -1,6 +1,5 @@
 package com.czh.util.util;
 
-import com.sun.istack.internal.NotNull;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -20,7 +19,7 @@ public class PropertiesLoader {
      * @param filePath
      * @throws IOException
      */
-    public PropertiesLoader(@NotNull String filePath) throws IOException {
+    public PropertiesLoader(String filePath) throws IOException {
         assert (StringUtils.isBlank(filePath)) : "读取的配置文件路径不能为空";
         InputStream inputStream;
         if (filePath.contains(File.separator)) {

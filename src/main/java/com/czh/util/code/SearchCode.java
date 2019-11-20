@@ -1,4 +1,4 @@
-package com.czh.util;
+package com.czh.util.code;
 
 /**
  * 代码搜索工具
