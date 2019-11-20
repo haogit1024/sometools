@@ -32,6 +32,10 @@ public class MyDbExport {
         printDbInfo();
     }
 
+    public MyDbExport(String url, String username, String password) {
+        db = new Database(url, username, password);
+    }
+
     private void printDbInfo() {
         System.out.println("表个数: " + db.getTables().size());
         System.out.println("总记录数: " + db.getAllCount());

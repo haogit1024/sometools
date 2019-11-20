@@ -88,6 +88,7 @@ public class Database {
 		this.url = url;
 		this.username = username;
 		this.password = password;
+
 		// 解析url获取data, host, port等信息
 		int beginIndex = url.indexOf("//") + 2;
 		int endIndex = url.indexOf("?");
