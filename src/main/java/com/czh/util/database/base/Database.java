@@ -102,7 +102,7 @@ public class Database {
 		this.host = addressArray[0];
 		this.port = addressArray[1].split("/")[0];
 		this.database = addressArray[1].split("/")[1];
-		this.connect();
+		this.connection = this.connect();
 	}
 
 	/**

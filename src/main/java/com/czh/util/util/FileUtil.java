@@ -1,5 +1,7 @@
 package com.czh.util.util;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.*;
 import java.util.List;
 
@@ -12,12 +14,24 @@ public class FileUtil {
     private FileOutputStream fos;
 
     public FileUtil(String filePath) throws IOException {
+        if (StringUtils.isBlank(filePath)) {
+            throw new IOException("文件路径不能为空");
+        }
         this.filePath = filePath;
         File file = new File(filePath);
+        // 如果存在文件, 先删除文件
         if (file.exists()) {
-            boolean b = file.delete();
-            if (!b) {
-                throw new IOException("删除文件失败 文件路径: " + filePath);
+            boolean deleteRes = file.delete();
+            if (!deleteRes) {
+                throw new IOException("删除文件失败, 文件路径: " + filePath);
+            }
+        }
+        String dirPath = filePath.substring(0, filePath.lastIndexOf(File.separator));
+        File dir = new File(dirPath);
+        if (!dir.exists()) {
+            boolean createRes = dir.mkdirs();
+            if (!createRes) {
+                throw new IOException("创建缓存目录失败, 文件路径: " + filePath);
             }
         }
         fos = new FileOutputStream(file, true);
@@ -64,6 +78,10 @@ public class FileUtil {
 
     public static void main(String[] args) {
 //        File file = new File("C:\\Users\\czh\\Desktop\\作品\\test.sql");
-
+        String path = "C:\\Users\\czh\\Desktop\\作品\\test.sql";
+        int index = path.lastIndexOf("\\");
+        System.out.println(index);
+        System.out.println(path.substring(0, index));
+        System.out.println(File.separator);
     }
 }
