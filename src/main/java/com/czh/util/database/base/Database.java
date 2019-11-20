@@ -84,10 +84,11 @@ public class Database {
 		this.connection = this.connect();
 	}
 
-	public Database(String url, String username, String password) {
+	public Database(String url, String username, String password, String driver) {
 		this.url = url;
 		this.username = username;
 		this.password = password;
+		this.driver = driver;
 
 		// 解析url获取data, host, port等信息
 		int beginIndex = url.indexOf("//") + 2;
