@@ -32,8 +32,8 @@ public class MyDbExport {
         printDbInfo();
     }
 
-    public MyDbExport(String url, String username, String password) {
-        db = new Database(url, username, password);
+    public MyDbExport(String url, String username, String password, String driver) {
+        db = new Database(url, username, password, driver);
     }
 
     private void printDbInfo() {
