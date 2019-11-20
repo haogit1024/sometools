@@ -96,7 +96,6 @@ public class Database {
 		}
 		// demo 47.102.137.55:3306/lonely
 		String addressInfo = url.substring(beginIndex, endIndex);
-		System.out.println(addressInfo);
 		String[] addressArray = addressInfo.split(":");
 		this.host = addressArray[0];
 		this.port = addressArray[1].split("/")[0];
