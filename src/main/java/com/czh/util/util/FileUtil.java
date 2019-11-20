@@ -1,4 +1,4 @@
-package com.czh.util.database.base;
+package com.czh.util.util;
 
 import java.io.*;
 import java.util.List;
