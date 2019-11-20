@@ -25,6 +25,7 @@ public class Database {
 	private String password;
 	private String database;
 	private String driver;
+	private String url;
 
 	/*========数据库connection========*/
 	private Connection connection;
@@ -83,12 +84,37 @@ public class Database {
 		this.connection = this.connect();
 	}
 
+	public Database(String url, String username, String password) {
+		this.url = url;
+		this.username = username;
+		this.password = password;
+		// 解析url获取data, host, port等信息
+		int beginIndex = url.indexOf("//") + 2;
+		int endIndex = url.indexOf("?");
+		if (beginIndex == 1 || endIndex == -1) {
+			throw new RuntimeException("创建Database失败, url错误");
+		}
+		// demo 47.102.137.55:3306/lonely
+		String addressInfo = url.substring(beginIndex, endIndex);
+		System.out.println(addressInfo);
+		String[] addressArray = addressInfo.split(":");
+		this.host = addressArray[0];
+		this.port = addressArray[1].split("/")[0];
+		this.database = addressArray[1].split("/")[1];
+		this.connect();
+	}
+
 	/**
 	 * 返回一个sql connection
 	 */
 	private Connection connect() {
-        String url = "jdbc:mysql://"+ this.host +":"+ this.port +"/"+ this.database
-        		+"?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&serverTimezone=UTC";
+        String url;
+        if (StringUtils.isNotBlank(this.url)) {
+        	url = this.url;
+		} else {
+        	url = "jdbc:mysql://"+ this.host +":"+ this.port +"/"+ this.database
+					+"?autoReconnect=true&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&serverTimezone=UTC";
+		}
         try {
             Class.forName(driver);
             return DriverManager.getConnection(url, username, password);
