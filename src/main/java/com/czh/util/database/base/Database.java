@@ -41,11 +41,11 @@ public class Database {
 
 	/*=====性能模式：是否开启多线程=====*/
 	private boolean powerMode = false;
-	private final int cpuCount = Runtime.getRuntime().availableProcessors();
+	private static final int cpuCount = Runtime.getRuntime().availableProcessors();
 	/*=======性能模式下的线程数量=======*/
-	private final int threadCount = cpuCount * 2;
+	public static final int threadCount = cpuCount * 2;
 	/*=====性能模式下的数据库连接池=====*/
-	List<Connection> connectionList = new ArrayList<>(threadCount);
+    private List<Connection> connectionList = new ArrayList<>(threadCount);
 	/*=======数据库连接池索引=======*/
 	private int connListIndex = 0;
 
@@ -330,7 +330,7 @@ public class Database {
 		StringBuilder res = new StringBuilder();
 		String sql = "select * from `%s` limit %d, %d";
 		sql = String.format(sql, table, start, offset);
-		List<List<String>> data = this.executeSql(sql).reduceList();
+		List<List<String>> data = this.powerExecuteSql(sql).reduceList();
 		String baseInsertSql = "INSERT INTO `%s` VALUES(%s);";
 		// 遍历每一条行数据
 		for (List<String> row : data) {

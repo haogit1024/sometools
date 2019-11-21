@@ -19,7 +19,16 @@ public class FileUtil {
         }
         this.filePath = filePath;
         File file = new File(filePath);
-        // 如果存在文件, 先删除文件
+        createFile(file);
+    }
+
+    public FileUtil(String dir, String fileName) throws IOException {
+        File file = new File(dir, fileName);
+        this.filePath = file.getPath();
+        createFile(file);
+    }
+
+    private void createFile(File file) throws IOException {
         if (file.exists()) {
             boolean deleteRes = file.delete();
             if (!deleteRes) {
