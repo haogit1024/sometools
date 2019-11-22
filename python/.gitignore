@@ -26,6 +26,8 @@
 target
 log
 *.log
+__pycache__
+
 
 ### STS ###
 .apt_generated
@@ -36,4 +38,4 @@ log
 .springBeans
 .sts4-cache
 
-/*/download_file/*
+download_file

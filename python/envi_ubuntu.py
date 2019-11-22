@@ -4,7 +4,8 @@
 """ 一个搭建编程环境脚本脚本 """
 
 import os
-from HttpClient import WindowsChrome
+import sys
+
 
 def java():
     """
@@ -14,9 +15,9 @@ def java():
     print("开始安装openjdk8")
     os.system(java_cmd)
     print('开始安装maven')
-    # http://mirror.bit.edu.cn/apache/maven/maven-3/3.6.2/binaries/apache-maven-3.6.2-bin.tar.gz
-    # TODO 获取版本号和下载文件 合并 python util
+    
     pass
+
 
 def node_vue():
     """
@@ -37,7 +38,13 @@ def main():
     """
     根据命令行参数搭建需要的环境
     """
-    pass
+    envi_type = sys.argv[1]
+    if envi_type == 'vue':
+        node_vue()
+    elif envi_type == 'java':
+        java()
+    else:
+        print('请输入要生成的环境类型')
 
 if __name__ == '__main__':
     main()
