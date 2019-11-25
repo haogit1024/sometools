@@ -39,3 +39,4 @@ __pycache__
 .sts4-cache
 
 download_file
+.download_cache

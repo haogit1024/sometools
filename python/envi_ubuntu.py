@@ -34,6 +34,7 @@ def node_vue():
     print('开始安装vue/cli')
     os.system(vue_cmd)
 
+
 def main():
     """
     根据命令行参数搭建需要的环境
@@ -46,6 +47,6 @@ def main():
     else:
         print('请输入要生成的环境类型')
 
+
 if __name__ == '__main__':
     main()
-    
