@@ -22,11 +22,11 @@
 *.rar
 
 # 项目添加
-.idea
 target
 log
-*.log
 __pycache__
+download_file
+.download_cache
 
 
 ### STS ###
@@ -37,6 +37,3 @@ __pycache__
 .settings
 .springBeans
 .sts4-cache
-
-download_file
-.download_cache
