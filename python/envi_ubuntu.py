@@ -9,7 +9,7 @@ import sys
 
 def java():
     """
-    ubuntu安装openjdk, 去他妈的orcalejdk
+    ubuntu安装openjdk, fuck orcale
     """
     java_cmd: str = r'sudo apt-get install openjdk-8-jdk,openjdk-8-jre'
     print("开始安装openjdk8")
