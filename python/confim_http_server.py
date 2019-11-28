@@ -3,15 +3,15 @@ import sys
 import time
 
 
-def main(http_url: str, time_out_second: int) -> bool :
-    time.sleep(30)
-    sum_time: int = 30
+def main(http_url: str, time_out_second: int) -> bool:
+    time.sleep(20)
+    sum_time: int = 20
     while sum_time <= time_out_second:
         response = requests.get(http_url)
         if response.status_code == 200:
             return True
         time.sleep(5)
-        sum_time = sum_time + 5;
+        sum_time = sum_time + 5
     return False
 
 
