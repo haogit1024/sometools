@@ -11,7 +11,7 @@ def java():
     """
     ubuntu安装openjdk, fuck orcale
     """
-    java_cmd: str = r'sudo apt-get install openjdk-8-jdk,openjdk-8-jre'
+    java_cmd: str = r'sudo apt-get install openjdk-8-jdk openjdk-8-jre'
     print("开始安装openjdk8")
     os.system(java_cmd)
     print('开始安装maven')
