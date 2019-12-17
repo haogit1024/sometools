@@ -20,7 +20,7 @@ class Downloader(object):
             p_version = p_version.replace("Apache Maven ", "")
             p_version = p_version.replace(" is the latest release and recommended version for all users.", "")
             default_version = p_version
-            logging.info('获取到的maven版本号:', default_version)
+            logging.info('获取到的maven版本号:' + default_version)
         except Exception as e:
             logging.exception(e)
         return default_version
