@@ -32,6 +32,7 @@ class Downloader(object):
         """
         base_url = r'http://mirror.bit.edu.cn/apache/maven/maven-3/%s/binaries/apache-maven-%s-bin.tar.gz'
         version = self.__get_maven_version()
+        version ="3.6.2"
         download_url = base_url % (version, version)
         print('获取到maven的下载地址: ', download_url)
         print('开始下载maven')
