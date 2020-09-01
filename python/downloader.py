@@ -14,9 +14,11 @@ class Downloader(object):
         try:
             download_page_url = r'http://maven.apache.org/download.cgi'
             download_page_html = self.browser.get(download_page_url)
-            soup = BeautifulSoup(download_page_html, 'lxml')
+            # soup = BeautifulSoup(download_page_html, 'lxml')
+            soup = BeautifulSoup(download_page_html, 'html.parser')
             # demo Apache Maven 3.6.2 is the latest release and recommended version for all users.
             p_version = soup.p.text
+            print(r'p_version: ', p_version)
             p_version = p_version.replace("Apache Maven ", "")
             p_version = p_version.replace(" is the latest release and recommended version for all users.", "")
             default_version = p_version
@@ -32,7 +34,7 @@ class Downloader(object):
         """
         base_url = r'http://mirror.bit.edu.cn/apache/maven/maven-3/%s/binaries/apache-maven-%s-bin.tar.gz'
         version = self.__get_maven_version()
-        version ="3.6.2"
+        # version ="3.6.2"
         download_url = base_url % (version, version)
         print('获取到maven的下载地址: ', download_url)
         print('开始下载maven')
@@ -68,7 +70,7 @@ class Downloader(object):
         default_version = r'v12.13.1'
         try:
             node_html = self.browser.get('https://nodejs.org/en/')
-            soup = BeautifulSoup(node_html, 'lxml')
+            soup = BeautifulSoup(node_html, 'html.parser')
             download_button = soup.select('.home-downloadbutton')[0]
             default_version = download_button.attrs['data-version']
             logging.info('获取到的node版本号:' + default_version)

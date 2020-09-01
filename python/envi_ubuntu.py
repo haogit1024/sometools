@@ -21,6 +21,10 @@ def java():
     maven_file_path = downloader.download_maven()
     print('下载maven完成')
     print('开始解压')
+    # TODO 创建 java_tools 文件夹, 获取 maven tar 包文件名, 调用 tar 命令解压
+    maven_tar_file_name = os.path.basename(maven_file_path)
+    # if not os.path.exists()
+    shutil.copy(maven_file_path, '~/java_tools/')
     print('把maven软连接到 /usr/bin/maven 下')
 
 
@@ -28,16 +32,22 @@ def node_vue():
     """
     根据操作系统类型搭建vue开发环境
     """
-    node_cmds: [] = [r'sudo apt install nodejs', r'sudo apt install npm', r'npm intall -g n', r'sudo n stable']
+    node_cmds: [] = [r'sudo apt install npm', r'npm intall -g n']
     print('开始安装node')
     for cmd in node_cmds:
         os.system(cmd)
-    cnpm_cmd = r'sudo npm install -g cnpm --registry=https://registry.npm.taobao.org'
     vue_cmd = r'sudo npm install -g @vue/cli'
-    print('开始安装cnpm')
-    os.system(cnpm_cmd)
     print('开始安装vue/cli')
     os.system(vue_cmd)
+
+
+def thefuck():
+    os.system(r'sudo pip3 install thefuck')
+
+
+def ohmyzsh():
+    os.system('sudo apt install wget')
+    os.system(r'sh -c "$(fetch -o - https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"')
 
 
 def main():
