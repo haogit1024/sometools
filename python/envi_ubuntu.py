@@ -5,7 +5,8 @@
 
 import os
 import sys
-
+import shutil
+from downloader import Downloader
 
 def java():
     """
@@ -15,8 +16,12 @@ def java():
     print("开始安装openjdk8")
     os.system(java_cmd)
     print('开始安装maven')
-    
-    pass
+    downloader = Downloader()
+    # TODO 把返回的文件路径复制到对应的地方并解压
+    maven_file_path = downloader.download_maven()
+    print('下载maven完成')
+    print('开始解压')
+    print('把maven软连接到 /usr/bin/maven 下')
 
 
 def node_vue():

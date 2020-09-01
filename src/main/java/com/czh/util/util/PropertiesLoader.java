@@ -12,7 +12,7 @@ import java.util.*;
  * @author czh
  */
 public class PropertiesLoader {
-    private Properties properties;
+    private final Properties properties;
 
     /**
      * 根据一个路径初始化，可以是resource的相对路径和绝对路径

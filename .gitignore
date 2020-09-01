@@ -1,39 +1,7 @@
-/target
-.idea
-/test
-*.iml
-
-# Compiled class file
-*.class
-
-# Log file
-*.log
-
-# BlueJ files
-*.ctxt
-
-
-# Package Files #
-*.jar
-*.war
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# 项目添加
-.idea
-target
-log
-*.log
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
+/target/
 .project
+.classpath
+*.iml
+.idea
 .settings
-.springBeans
-.sts4-cache
-
-/*/download_file/*
+.vscode

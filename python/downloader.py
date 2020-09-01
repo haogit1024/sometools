@@ -79,4 +79,4 @@ class Downloader(object):
 
 if __name__ == '__main__':
     downloader = Downloader()
-    print(downloader.download_maven())
+    # print(downloader.download_maven())
