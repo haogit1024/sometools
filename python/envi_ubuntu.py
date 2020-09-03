@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """ 一个搭建编程环境脚本脚本 """
@@ -6,7 +6,14 @@
 import os
 import sys
 import shutil
+import tempfile
 from downloader import Downloader
+
+
+# 当前登录用户主目录, 例如: /home/czh
+home_dir = os.path.expanduser('~')
+temp_dir = tempfile.gettempdir()
+
 
 def java():
     """
@@ -17,15 +24,18 @@ def java():
     os.system(java_cmd)
     print('开始安装maven')
     downloader = Downloader()
-    # TODO 把返回的文件路径复制到对应的地方并解压
+    # 把返回的文件路径复制到对应的地方并解压
     maven_file_path = downloader.download_maven()
     print('下载maven完成')
     print('开始解压')
-    # TODO 创建 java_tools 文件夹, 获取 maven tar 包文件名, 调用 tar 命令解压
-    maven_tar_file_name = os.path.basename(maven_file_path)
-    # if not os.path.exists()
-    shutil.copy(maven_file_path, '~/java_tools/')
+    # 创建 java_tools 文件夹, 把 maven_tar 解压到 java_tools 目录下
+    java_tools_dir = home_dir + r'/java_tools'
+    if not os.path.exists(java_tools_dir):
+        os.mkdir(java_tools_dir)
+    # TODO 换个思路, 先解压到临时文件夹, 然后把复制到 java_tools 中重命名
+    shutil.unpack_archive(maven_file_path, java_tools_dir)
     print('把maven软连接到 /usr/bin/maven 下')
+    os.system(r'sudo ls -n ')
 
 
 def node_vue():
