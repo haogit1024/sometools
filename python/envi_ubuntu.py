@@ -32,10 +32,25 @@ def java():
     java_tools_dir = home_dir + r'/java_tools'
     if not os.path.exists(java_tools_dir):
         os.mkdir(java_tools_dir)
-    # TODO 换个思路, 先解压到临时文件夹, 然后把复制到 java_tools 中重命名
-    shutil.unpack_archive(maven_file_path, java_tools_dir)
+    # 换个思路, 先解压到临时文件夹, 然后把复制到 java_tools 中重命名
+    maven_temp_dir = temp_dir + "/czhmaven"
+    # 如果不存在就创建, 存在则清空文件下的所有文件
+    if os.path.exists(maven_temp_dir):
+        os.removedirs(maven_temp_dir)
+    os.mkdir(maven_temp_dir)
+    shutil.unpack_archive(maven_file_path, maven_temp_dir)
+    # 获取临时文件的第一个文件名
+    maven_untar_name = os.listdir(maven_temp_dir)[0]
+    # 移动到 java_tools 下并重命名, 和 mv 命令一样的效果
+    maven_temp_path = maven_temp_dir + r"/" + maven_untar_name
+    maven_final_dir = java_tools_dir + r"/maven"
+    shutil.move(maven_temp_path, maven_final_dir)
+    # 删除临时文件夹
+    os.removedirs(maven_temp_dir)
     print('把maven软连接到 /usr/bin/maven 下')
-    os.system(r'sudo ls -n ')
+    # mvn_path = maven_final_dir + r"/bin/mvn"
+    # ls_cmd = r'sudo ls -n ' + mvn_path + " " + r'/usr/bin'
+    # os.system(ls_cmd)
 
 
 def node_vue():
