@@ -48,9 +48,11 @@ def java():
     # 删除临时文件夹
     os.removedirs(maven_temp_dir)
     print('把maven软连接到 /usr/bin/maven 下')
-    # mvn_path = maven_final_dir + r"/bin/mvn"
-    # ls_cmd = r'sudo ls -n ' + mvn_path + " " + r'/usr/bin'
-    # os.system(ls_cmd)
+    # 判断 /usr/bin 下有没有 maven, 如果有则不创建软连接
+    if not os.path.exists(r'/usr/bin/mvn'):
+        mvn_path = maven_final_dir + r"/bin/mvn"
+        ls_cmd = r'sudo ls -n ' + mvn_path + " " + r'/usr/bin'
+        os.system(ls_cmd)
 
 
 def node_vue():
@@ -75,6 +77,10 @@ def ohmyzsh():
     os.system(r'sh -c "$(fetch -o - https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"')
 
 
+def vim():
+    os.system('sudo apt install vim neovim')
+
+
 def main():
     """
     根据命令行参数搭建需要的环境
@@ -84,6 +90,11 @@ def main():
         node_vue()
     elif envi_type == 'java':
         java()
+    elif envi_type == 'all':
+        java()
+        node_vue()
+        ohmyzsh()
+        thefuck()
     else:
         print('请输入要生成的环境类型')
 

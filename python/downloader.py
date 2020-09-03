@@ -2,6 +2,7 @@ from HttpClient import WindowsChrome
 from bs4 import BeautifulSoup
 import os
 import logging
+import time
 
 
 class Downloader(object):
@@ -78,7 +79,55 @@ class Downloader(object):
             logging.exception(e)
         return default_version
 
+    def download_toolbox(self):
+        # https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release&build=&_=1599128169044
+        try:
+            url = r'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release&build=&_=' + str(int(time.time() * 1000))
+            res_json = self.browser.get(url, encoding='UTF-8')
+            """
+{
+    "TBA": [
+        {
+            "date": "2020-09-01",
+            "type": "release",
+            "downloads": {
+                "linux": {
+                    "link": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.18.7455.tar.gz",
+                    "size": 93224317,
+                    "checksumLink": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.18.7455.tar.gz.sha256"
+                },
+                "windows": {
+                    "link": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.18.7455.exe",
+                    "size": 73197984,
+                    "checksumLink": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.18.7455.exe.sha256"
+                },
+                "mac": {
+                    "link": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.18.7455.dmg",
+                    "size": 95727142,
+                    "checksumLink": "https://download.jetbrains.com/toolbox/jetbrains-toolbox-1.18.7455.dmg.sha256"
+                }
+            },
+            "patches": {},
+            "notesLink": null,
+            "licenseRequired": null,
+            "version": "1.18",
+            "majorVersion": "1.18",
+            "build": "1.18.7455",
+            "whatsnew": "<p>Check out the <a href=\"https://blog.jetbrains.com/blog/2020/09/01/dark-theme-in-toolbox-app-1-18/\">blog post.</a></p>",
+            "uninstallFeedbackLinks": null,
+            "printableReleaseType": null
+        }
+    ]
+}
+            """
+            print(res_json)
+        except Exception as e:
+            logging.exception(e)
+
 
 if __name__ == '__main__':
     downloader = Downloader()
+    # downloader.download_node('Linux')
     # print(downloader.download_maven())
+    downloader.download_toolbox()
+    print('运行完成')

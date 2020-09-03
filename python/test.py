@@ -3,6 +3,7 @@ import platform
 import os
 import shutil
 import tempfile
+import time
 
 
 if __name__ == "__main__":
@@ -15,4 +16,5 @@ if __name__ == "__main__":
     print('-----------')
     files = os.listdir(r'/home/czh/maven')
     print(files)
-    shutil.move(r'/home/czh/test/maven', r'/home/czh/test/temp/maven3')
+    print(os.path.exists(r'/usr/bin/java'))
+    print(time.time())
