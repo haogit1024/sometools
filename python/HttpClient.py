@@ -5,7 +5,7 @@ import json
 import time
 import hashlib
 from abc import ABCMeta, abstractmethod
-from multiprocessing import Pool, Process, Manager
+from multiprocessing import Pool, Manager
 from urllib.parse import urlsplit
 
 logging.basicConfig(level=logging.INFO)
@@ -332,12 +332,15 @@ class WindowsChrome(BaseHttpClient):
     def close(self, is_join: bool):
         """
         用户必须手动调用该方法
-        :param is_join:
+        :param is_join: 是否等待子进程结束
         :return:
         """
+        # 阻止其他任务提交到进程池
+        self.__download_pool.close()
         if is_join:
-            self.__download_pool.close()
             self.__download_pool.join()
+        else:
+            self.__download_pool.terminate()
 
     def test(self):
         log.info('url=%s, statusCode=%s' % (r'url', r'response.status_code'))

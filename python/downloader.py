@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import os
 import logging
 import time
+import json
 
 
 class Downloader(object):
@@ -79,7 +80,10 @@ class Downloader(object):
             logging.exception(e)
         return default_version
 
-    def download_toolbox(self):
+    def download_toolbox(self, platform_system: str):
+        """
+        : platform_system: 操作系统类型, 为 platform.system() 获取到的值
+        """
         # https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release&build=&_=1599128169044
         try:
             url = r'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release&build=&_=' + str(int(time.time() * 1000))
@@ -121,13 +125,25 @@ class Downloader(object):
 }
             """
             print(res_json)
+            json_dict = json.loads(res_json)
+            download_url = json_dict['TBA'][0]['downloads']['linux']['link']
+            file_name = download_url[download_url.rfind(r'/') + 1:]
+            file_path = os.path.join(r'download_file', file_name)
+            self.browser.download(download_url, file_path)
+            return file_path
         except Exception as e:
             logging.exception(e)
+
+    def close(self):
+        """
+        调用方必须手动调用该方法关闭下载器
+        """
+        self.browser.close(True)
 
 
 if __name__ == '__main__':
     downloader = Downloader()
     # downloader.download_node('Linux')
     # print(downloader.download_maven())
-    downloader.download_toolbox()
+    downloader.download_toolbox('Linux')
     print('运行完成')

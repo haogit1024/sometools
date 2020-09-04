@@ -7,12 +7,18 @@ import os
 import sys
 import shutil
 import tempfile
+import platform
 from downloader import Downloader
 
 
 # 当前登录用户主目录, 例如: /home/czh
 home_dir = os.path.expanduser('~')
 temp_dir = tempfile.gettempdir()
+# 创建 java_tools 文件夹, 把 maven_tar 解压到 java_tools 目录下
+java_tools_dir = home_dir + r'/java_tools'
+if not os.path.exists(java_tools_dir):
+    os.mkdir(java_tools_dir)
+downloader = Downloader()
 
 
 def java():
@@ -23,15 +29,10 @@ def java():
     print("开始安装openjdk8")
     os.system(java_cmd)
     print('开始安装maven')
-    downloader = Downloader()
     # 把返回的文件路径复制到对应的地方并解压
     maven_file_path = downloader.download_maven()
     print('下载maven完成')
     print('开始解压')
-    # 创建 java_tools 文件夹, 把 maven_tar 解压到 java_tools 目录下
-    java_tools_dir = home_dir + r'/java_tools'
-    if not os.path.exists(java_tools_dir):
-        os.mkdir(java_tools_dir)
     # 换个思路, 先解压到临时文件夹, 然后把复制到 java_tools 中重命名
     maven_temp_dir = temp_dir + "/czhmaven"
     # 如果不存在就创建, 存在则清空文件下的所有文件
@@ -81,6 +82,11 @@ def vim():
     os.system('sudo apt install vim neovim')
 
 
+def toolbox():
+    toolbox_path = downloader.download_toolbox(platform.system())
+    shutil.copy(toolbox_path, java_tools_dir)
+
+
 def main():
     """
     根据命令行参数搭建需要的环境
@@ -101,3 +107,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # 关闭下载器
+    downloader.close()
