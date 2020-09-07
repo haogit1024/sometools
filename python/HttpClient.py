@@ -227,7 +227,7 @@ class DownloadUtil(object):
 
 
 class WindowsChrome(BaseHttpClient):
-    def __init__(self, max_download_num: int = 5, download_cache_path: str = r'.download_cache'):
+    def __init__(self, max_download_num: int = None, download_cache_path: str = r'.download_cache'):
         # windows google chrome http request header
         self.headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3551.3 Safari/537.36',

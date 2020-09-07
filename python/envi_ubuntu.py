@@ -48,23 +48,18 @@ def java():
     shutil.move(maven_temp_path, maven_final_dir)
     # 删除临时文件夹
     os.removedirs(maven_temp_dir)
-    print('把maven软连接到 /usr/bin/maven 下')
-    # 判断 /usr/bin 下有没有 maven, 如果有则不创建软连接
-    if not os.path.exists(r'/usr/bin/mvn'):
-        mvn_path = maven_final_dir + r"/bin/mvn"
-        ls_cmd = r'sudo ls -n ' + mvn_path + " " + r'/usr/bin'
-        os.system(ls_cmd)
 
 
 def node_vue():
     """
     根据操作系统类型搭建vue开发环境
+    TODO 改为下载最新的安装包, 然后配置系统参数
     """
-    node_cmds: [] = [r'sudo apt install npm', r'npm intall -g n']
+    node_cmds: [] = [r'sudo apt install npm', r'sudo npm --registry=https://registry.npm.taobao.org intall -g n']
     print('开始安装node')
     for cmd in node_cmds:
         os.system(cmd)
-    vue_cmd = r'sudo npm install -g @vue/cli'
+    vue_cmd = r'sudo npm --registry=https://registry.npm.taobao.org install -g @vue/cli'
     print('开始安装vue/cli')
     os.system(vue_cmd)
 
@@ -101,11 +96,18 @@ def main():
         node_vue()
         ohmyzsh()
         thefuck()
+    elif envi_type == 'dev':
+        java()
+        node_vue()
     else:
         print('请输入要生成的环境类型')
 
 
 if __name__ == '__main__':
-    main()
-    # 关闭下载器
-    downloader.close()
+    try:
+        main()
+    except Exception as e:
+        print(e)
+    finally:
+        # 关闭下载器
+        downloader.close()
