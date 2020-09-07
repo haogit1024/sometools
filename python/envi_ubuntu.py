@@ -14,10 +14,10 @@ from downloader import Downloader
 # 当前登录用户主目录, 例如: /home/czh
 home_dir = os.path.expanduser('~')
 temp_dir = tempfile.gettempdir()
-# 创建 java_tools 文件夹, 把 maven_tar 解压到 java_tools 目录下
-java_tools_dir = home_dir + r'/java_tools'
-if not os.path.exists(java_tools_dir):
-    os.mkdir(java_tools_dir)
+# 创建 develop_tools_dir 文件夹, 把 maven_tar 解压到 develop_tools_dir 目录下
+develop_tools_dir = home_dir + r'/develop_tools'
+if not os.path.exists(develop_tools_dir):
+    os.mkdir(develop_tools_dir)
 downloader = Downloader()
 
 
@@ -33,7 +33,7 @@ def java():
     maven_file_path = downloader.download_maven()
     print('下载maven完成')
     print('开始解压')
-    # 换个思路, 先解压到临时文件夹, 然后把复制到 java_tools 中重命名
+    # 换个思路, 先解压到临时文件夹, 然后把复制到 develop_tools_dir 中重命名
     maven_temp_dir = temp_dir + "/czhmaven"
     # 如果不存在就创建, 存在则清空文件下的所有文件
     if os.path.exists(maven_temp_dir):
@@ -42,9 +42,9 @@ def java():
     shutil.unpack_archive(maven_file_path, maven_temp_dir)
     # 获取临时文件的第一个文件名
     maven_untar_name = os.listdir(maven_temp_dir)[0]
-    # 移动到 java_tools 下并重命名, 和 mv 命令一样的效果
+    # 移动到 develop_tools_dir 下并重命名, 和 mv 命令一样的效果
     maven_temp_path = maven_temp_dir + r"/" + maven_untar_name
-    maven_final_dir = java_tools_dir + r"/maven"
+    maven_final_dir = develop_tools_dir + r"/maven"
     shutil.move(maven_temp_path, maven_final_dir)
     # 删除临时文件夹
     os.removedirs(maven_temp_dir)
@@ -84,7 +84,7 @@ def vim():
 
 def toolbox():
     toolbox_path = downloader.download_toolbox(platform.system())
-    shutil.copy(toolbox_path, java_tools_dir)
+    shutil.copy(toolbox_path, develop_tools_dir)
 
 
 def main():
