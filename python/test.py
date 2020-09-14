@@ -5,6 +5,7 @@ import shutil
 import tempfile
 import time
 import json
+import uuid
 
 
 if __name__ == "__main__":
@@ -62,3 +63,10 @@ if __name__ == "__main__":
     print(download_url)
     # print(download_url[download_url.rfind(r'/'):])
     print(download_url.rfind(r'/'))
+    print(uuid.uuid1())
+    print(type(uuid.uuid1()))
+    print(uuid.uuid1())
+    print(str(uuid.uuid1()))
+    # 73502768-74679344/103157351
+    print(int(73502768 / 103157351 * 100))
+    print("%.2f" % (73502768 / 103157351 * 100))

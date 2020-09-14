@@ -126,13 +126,47 @@ class Downloader(object):
             """
             print(res_json)
             json_dict = json.loads(res_json)
-            download_url = json_dict['TBA'][0]['downloads']['linux']['link']
+            download_url = json_dict['TBA'][0]['downloads'][platform_system.lower]['link']
             file_name = download_url[download_url.rfind(r'/') + 1:]
             file_path = os.path.join(r'download_file', file_name)
             self.browser.download(download_url, file_path)
             return file_path
         except Exception as e:
             logging.exception(e)
+
+    def donwload_adopt_open_jdk(self, version: str, type: str, platform_system: str):
+        """下载AdoptOpenJdk方法
+
+        Args:
+            version (str): jdk版本号, 8, 9, 10, 11, 12, 13, 14
+            type (str): jdk/jre
+            platform_system (str): platform模块获取的系统名称, Windows, Linux
+        """
+        platform_system = platform_system.lower()
+        # demo https://mirrors.tuna.tsinghua.edu.cn/AdoptOpenJDK/11/jdk/x64/linux/OpenJDK11U-jdk_x64_linux_hotspot_11.0.8_10.tar.gz
+        base_url = r'https://mirrors.tuna.tsinghua.edu.cn/AdoptOpenJDK/%s/%s/x64/%s'
+        base_url = base_url % (version, type, platform_system)
+        download_page = self.browser.get(base_url, r'utf-8')
+        soup = BeautifulSoup(download_page, 'html.parser')
+        # table = soup.find('table', attrs={'id': 'list'})
+        # print(table)
+        # tr_list = table.find('tbody').findAll('tr')
+        # if (len(tr_list) >= 2):
+        #     tr = tr_list[1]
+        #     td_list = tr.find('td', attrs={'class': 'link'})
+        td_list = soup.findAll('td', attrs={'class': 'link'})
+        if len(td_list) >= 2:
+            td = td_list[1]
+            a = td.find('a')
+            jdk_file_name = a['href']
+            download_url = base_url + r'/' + jdk_file_name
+            file_path = os.path.join(r'download_file', jdk_file_name)
+            self.browser.download(download_url, file_path)
+            return file_path
+        else:
+            return None
+            
+        
 
     def close(self):
         """

@@ -106,6 +106,7 @@ class DownloadUtil(object):
             # 根据响应头计算download_size
             #                         bytes 0-10/1560323
             response_content_range = response.headers['Content-Range']
+            
             log.info("Content-Range: " + response_content_range)
             file_length, rel_start_byte, rel_end_byte = self.__parse_content_range(response_content_range)
             #                           bytes 0-10/1560323

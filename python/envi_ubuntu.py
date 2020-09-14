@@ -8,9 +8,13 @@ import sys
 import shutil
 import tempfile
 import platform
+import uuid
+import logging
 from downloader import Downloader
 
 
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("envi_ubuntu")
 # 当前登录用户主目录, 例如: /home/czh
 home_dir = os.path.expanduser('~')
 temp_dir = tempfile.gettempdir()
@@ -23,7 +27,7 @@ downloader = Downloader()
 
 def java():
     """
-    ubuntu安装openjdk, fuck orcale
+    ubuntu安装openjdk, fuck oracle
     """
     java_cmd: str = r'sudo apt-get install openjdk-8-jdk openjdk-8-jre'
     print("开始安装openjdk8")
@@ -55,13 +59,13 @@ def node_vue():
     根据操作系统类型搭建vue开发环境
     TODO 改为下载最新的安装包, 然后配置系统参数
     """
-    node_cmds: [] = [r'sudo apt install npm', r'sudo npm --registry=https://registry.npm.taobao.org intall -g n']
-    print('开始安装node')
-    for cmd in node_cmds:
-        os.system(cmd)
-    vue_cmd = r'sudo npm --registry=https://registry.npm.taobao.org install -g @vue/cli'
-    print('开始安装vue/cli')
-    os.system(vue_cmd)
+    # node_cmds: [] = [r'sudo apt install npm', r'sudo npm --registry=https://registry.npm.taobao.org intall -g n']
+    # print('开始安装node')
+    # for cmd in node_cmds:
+    #     os.system(cmd)
+    # vue_cmd = r'sudo npm --registry=https://registry.npm.taobao.org install -g @vue/cli'
+    # print('开始安装vue/cli')
+    # os.system(vue_cmd)
 
 
 def thefuck():
@@ -82,6 +86,32 @@ def toolbox():
     shutil.copy(toolbox_path, develop_tools_dir)
 
 
+def unpack_and_move_to_dir(pack_path: str, tar_path: str):
+    """解压并把所有内容移动到指定的文件夹中
+
+    Args:
+        pack_path (str): 压缩包路径, 例如: /home/czh/maven3.6.2.tar.gz
+        tar_path (str): 解压后需要指定的路径, 例如: /home/czh/devlop_tools/maven
+    """
+    # 1. 创建临时文件夹 2. 解压缩到临时文件夹 3. cp 临时文件夹的第一个文件到指定 tar_path
+    uid = uuid.uuid1()
+    uppack_temp_dir = temp_dir + r"/" + str(uid)
+    os.makedirs(uppack_temp_dir)
+    try:
+        shutil.unpack_archive(pack_path, uppack_temp_dir)
+        untar_name = os.listdir(uppack_temp_dir)[0]
+        shutil.move(untar_name, tar_path)
+    except Exception as e:
+        logging.exception(e)
+    finally:
+        os.removedirs(uppack_temp_dir)
+
+
+def test():
+    ret = downloader.donwload_adopt_open_jdk('8', r'jdk', r'linux')
+    print(ret)
+
+
 def main():
     """
     根据命令行参数搭建需要的环境
@@ -99,6 +129,8 @@ def main():
     elif envi_type == 'dev':
         java()
         node_vue()
+    elif envi_type == 'test':
+        test()
     else:
         print('请输入要生成的环境类型')
 
