@@ -19,7 +19,10 @@ import java.util.*;
 @AllArgsConstructor
 public class TableRecordInfo {
     private String tableName;
-    private ArrayList<String> fieldList;
+
+    /**
+     * 其实可以直接用Map的, 脑抽设计错了，将错就错吧
+     */
     private LinkedHashMap<String, Object> fieldValueMap;
 
     /**
@@ -92,12 +95,11 @@ public class TableRecordInfo {
     }
 
     /**
-     * TableRecordInfo{tableName='abcde', fieldList=[a, b, c], fieldValueMap={k1:v1, k2:v2, k3:v3}}
+     * TableRecordInfo{tableName='abcde', fieldValueMap={k1:v1, k2:v2, k3:v3}}
      */
     @Override
     public String toString() {
-        final String baseString = "TableRecordInfo{tableName='%s', fieldList=[%s], fieldValueMap={%s}}";
-        String fieldListString = Utils.listToString(fieldList, separator);
+        final String baseString = "TableRecordInfo{tableName='%s', fieldValueMap={%s}}";
         StringBuilder valueBuilder = new StringBuilder();
         fieldValueMap.forEach((field, value) -> valueBuilder.append(field)
                 .append(": ").append(value.toString()).append(separator));
@@ -105,18 +107,16 @@ public class TableRecordInfo {
         if (!"".equals(valueString)) {
             valueString = valueString.substring(0, valueString.length() - separator.length());
         }
-        return String.format(baseString, this.tableName, fieldListString, valueString);
+        return String.format(baseString, this.tableName, valueString);
     }
 
     public TableRecordInfo(Object object) {
-        fieldList = new ArrayList<>();
         fieldValueMap = new LinkedHashMap<>();
         this.tableName = Utils.classNameToTableName(object.getClass().getName());
         Class<?> clazz = object.getClass();
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
             String fieldName = field.getName();
-            this.fieldList.add(fieldName);
             if (!field.isAccessible()) {
                 field.setAccessible(true);
             }
@@ -166,6 +166,7 @@ public class TableRecordInfo {
      * 转换成查询语句, fieldValueMap不为空的值为条件
      * 当fieldValueMap中的 a 和 b 不为空时生成以下sql
      * demo: select * from this.tableName where a = 'a' and b = 'c'
+     * select sql 好像不太适合用这个类生成, 以后有机会再优化
      * @return
      */
     public String convertToSelectSql() {
@@ -176,6 +177,10 @@ public class TableRecordInfo {
         return baseSql + this.getConditionFromFieldValueMap();
     }
 
+    /**
+     * 生成 insert sql
+     * @return
+     */
     public String convertToInsertSql() {
         final String baseSql = "insert into `" + this.tableName + "` (%s) values(%s)";
         List<String> fieldList = this.getFieldListFromFieldValueMap();
@@ -185,6 +190,11 @@ public class TableRecordInfo {
         return String.format(baseSql, fieldListString, valueListString);
     }
 
+    /**
+     * 生成 update sql
+     * @param conditionFields
+     * @return
+     */
     public String convertToUpdateSql(String... conditionFields) {
         // 如果 conditionFields 空, 不生成sql
         if (conditionFields.length == 0) {
@@ -203,6 +213,10 @@ public class TableRecordInfo {
         return String.format(baseSql, setStatement, conditionStatement);
     }
 
+    /**
+     * 生成 update sql
+     * @return
+     */
     public String convertToUpdateByIdSql() {
         String baseSql = "update `" + this.tableName + "` set %s where id = %s";
         Object idVal = this.fieldValueMap.get("id");
@@ -215,6 +229,11 @@ public class TableRecordInfo {
         return String.format(baseSql, setStatement, idVal.toString());
     }
 
+    /**
+     * 生成 delete sql
+     * @param conditionFields
+     * @return
+     */
     public String convertToDeleteSql(String... conditionFields) {
         String baseSql = "delete from `" + this.tableName + "` where 1=1 ";
         String conditionStatement = getConditionFromFieldValueMap(conditionFields);
@@ -224,6 +243,11 @@ public class TableRecordInfo {
         return baseSql + conditionStatement;
     }
 
+    /**
+     * 生成 delete sql
+     * @param conditionFields
+     * @return
+     */
     public String convertToDeleteById() {
         String baseSql = "delete from `" + this.tableName + "` where id=%s";
         Object idVal = fieldValueMap.get("id");

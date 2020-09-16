@@ -2,9 +2,11 @@ package com.czh.util.orm;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 1. 初始化 jdbc 连接
@@ -80,5 +82,58 @@ public class ORMDataBase {
         return null;
     }
 
+    private ResultSet executeQuerySql(String sql) {
+        try {
+            PreparedStatement pst =  this.connection.prepareStatement(sql);
+            return pst.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("运行sql出错，sql: " + sql);
+            System.exit(0);
+            return null;
+        }
+    }
 
+    public <T> T selectOne(T t) throws SQLException {
+        TableRecordInfo recordInfo = new TableRecordInfo(t);
+        String sql = recordInfo.convertToSelectSql();
+        ResultSet resultSet = executeQuerySql(sql);
+        if (resultSet == null || !resultSet.next()) {
+            return null;
+        }
+        ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+        int columnCount = resultSetMetaData.getColumnCount();
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>(columnCount);
+        for (int i = 1; i <= columnCount; i++) {
+            map.put(resultSetMetaData.getColumnClassName(i), resultSet.getObject(i));
+        }
+        recordInfo.setFieldValueMap(map);
+        return recordInfo.convertToType((Class<T>)t.getClass());
+    }
+
+    public <T> List<T> selectList(T t) throws SQLException {
+        TableRecordInfo recordInfo = new TableRecordInfo(t);
+        String sql = recordInfo.convertToSelectSql();
+        ResultSet resultSet = executeQuerySql(sql);
+        if (resultSet == null) {
+            return null;
+        }
+        String tableName = recordInfo.getTableName();
+        ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+        int columnCount = resultSetMetaData.getColumnCount();
+        List<TableRecordInfo> tableRecordInfoList = new ArrayList<>();
+        while (resultSet.next()) {
+            TableRecordInfo info = new TableRecordInfo();
+            info.setTableName(tableName);
+            LinkedHashMap<String, Object> map = new LinkedHashMap<>(columnCount);
+            for (int i = 1; i <= columnCount; i++) {
+                map.put(resultSetMetaData.getColumnClassName(i), resultSet.getObject(i));
+            }
+            info.setFieldValueMap(map);
+            tableRecordInfoList.add(info);
+        }
+        return tableRecordInfoList.stream()
+                .map(tableRecordInfo -> tableRecordInfo.convertToType((Class<T>)t.getClass()))
+                .collect(Collectors.toList());
+    }
 }
