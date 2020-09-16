@@ -17,5 +17,7 @@ public class TableRecordInfoTest extends TestCase {
         TableRecordInfo tableRecordInfo = new TableRecordInfo(fileSize);
         System.out.println(tableRecordInfo.convertToSelectSql());
         System.out.println(tableRecordInfo.convertToInsertSql());
+        System.out.println(tableRecordInfo.convertToUpdateSql("fileSystem", "parentDir"));
+        System.out.println(tableRecordInfo.convertToDeleteSql("fileSystem", "parentDir"));
     }
 }

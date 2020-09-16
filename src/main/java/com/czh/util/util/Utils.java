@@ -1,6 +1,5 @@
 package com.czh.util.util;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +27,16 @@ public class Utils {
             return ret.substring(1);
         }
         return ret;
+    }
+
+    public static boolean isNumber(Object object) {
+        if (object == null) {
+            return true;
+        }
+        return  object instanceof Byte ||
+                object instanceof Short ||
+                object instanceof Integer ||
+                object instanceof Long;
     }
 
     public static String classNameToTableName(String className) {
@@ -66,10 +75,7 @@ public class Utils {
             }
             if (isSql) {
                 // 不是数值类型
-                if (!(item instanceof Byte ||
-                    item instanceof Short ||
-                    item instanceof Integer||
-                    item instanceof Long)) {
+                if (!Utils.isNumber(item)) {
                     itemString = "\"" + itemString + "\"";
                 }
             }

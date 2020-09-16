@@ -40,6 +40,57 @@ public class TableRecordInfo {
         return ret;
     }
 
+    private String getConditionFromFieldValueMap() {
+        StringBuilder sb = new StringBuilder();
+        fieldValueMap.forEach((field, value) -> {
+            String baseCondition;
+            if (Utils.isNumber(value)) {
+                baseCondition = "and `%s`=%s ";
+            } else {
+                baseCondition = "and `%s`=\"%s\" ";
+            }
+            sb.append(String.format(baseCondition, Utils.toLine(field), value.toString()));
+        });
+        return sb.toString();
+    }
+
+    private String getConditionFromFieldValueMap(String... conditionFields) {
+        StringBuilder sb = new StringBuilder();
+        for (String conditionField : conditionFields) {
+            Object value = fieldValueMap.get(conditionField);
+            if (value == null) {
+                continue;
+            }
+            String baseCondition;
+            if (Utils.isNumber(value)) {
+                baseCondition = "and `%s`=%s ";
+            } else {
+                baseCondition = "and `%s`=\"%s\" ";
+            }
+            sb.append(String.format(baseCondition, Utils.toLine(conditionField), value.toString()));
+        }
+        return sb.toString();
+    }
+
+    private String getSetStatementFromFieldValueMap(List<String> fields) {
+        StringBuilder setBuilder = new StringBuilder();
+        fields.forEach(field -> {
+            String baseSet;
+            Object value = fieldValueMap.get(field);
+            if (Utils.isNumber(value)) {
+                baseSet = "`%s`=%s" + this.separator;
+            } else {
+                baseSet = "`%s`=\"%s\"" + this.separator;
+            }
+            setBuilder.append(String.format(baseSet, Utils.toLine(field), value.toString()));
+        });
+        String ret = setBuilder.toString();
+        if (!"".equals(ret)) {
+            ret = ret.substring(0, ret.length() - this.separator.length());
+        }
+        return ret;
+    }
+
     /**
      * TableRecordInfo{tableName='abcde', fieldList=[a, b, c], fieldValueMap={k1:v1, k2:v2, k3:v3}}
      */
@@ -122,25 +173,7 @@ public class TableRecordInfo {
             return null;
         }
         String baseSql = "select * from `" + this.tableName + "` ";
-        StringBuilder sb = new StringBuilder();
-        sb.append(baseSql);
-        if (fieldValueMap != null && fieldValueMap.size() > 0) {
-            // 避免sql错误
-            sb.append("where 1 = 1 ");
-            fieldValueMap.forEach((field, value) -> {
-                String baseCondition;
-                if (value instanceof Byte ||
-                    value instanceof Short ||
-                    value instanceof Integer ||
-                    value instanceof Long) {
-                    baseCondition = "and `%s`=%s ";
-                } else {
-                    baseCondition = "and `%s`=\"%s\" ";
-                }
-                sb.append(String.format(baseCondition, Utils.toLine(field), value.toString()));
-            });
-        }
-        return sb.toString();
+        return baseSql + this.getConditionFromFieldValueMap();
     }
 
     public String convertToInsertSql() {
@@ -153,13 +186,47 @@ public class TableRecordInfo {
     }
 
     public String convertToUpdateSql(String... conditionFields) {
-        final String baseSql = "update `" + this.tableName + "` %s where %s";
-        List<String> fieldList = new ArrayList<>(this.fieldValueMap.size());
-
-        return null;
+        // 如果 conditionFields 空, 不生成sql
+        if (conditionFields.length == 0) {
+            return null;
+        }
+        final String baseSql = "update `" + this.tableName + "` set %s where 1=1 %s";
+        List<String> fieldList = getFieldListFromFieldValueMap();
+        fieldList.removeAll(Arrays.asList(conditionFields));
+        // 1. 生成 setStatement 2. 生成whereStatement
+        String setStatement = getSetStatementFromFieldValueMap(fieldList);
+        System.out.println("setStatement : " + setStatement);
+        String conditionStatement = getConditionFromFieldValueMap(conditionFields);
+        if (StringUtils.isBlank(setStatement) || StringUtils.isBlank(conditionStatement)) {
+            return null;
+        }
+        return String.format(baseSql, setStatement, conditionStatement);
     }
 
     public String convertToUpdateByIdSql() {
-        return null;
+        String baseSql = "update `" + this.tableName + "` set %s where id = %s";
+        Object idVal = this.fieldValueMap.get("id");
+        if (idVal == null) {
+            return null;
+        }
+        List<String> fields = getFieldListFromFieldValueMap();
+        fields.remove("id");
+        String setStatement = getSetStatementFromFieldValueMap(fields);
+        return String.format(baseSql, setStatement, idVal.toString());
+    }
+
+    public String convertToDeleteSql(String... conditionFields) {
+        String baseSql = "delete from `" + this.tableName + "` where 1=1 ";
+        String conditionStatement = getConditionFromFieldValueMap(conditionFields);
+        if (StringUtils.isBlank(conditionStatement)) {
+            return null;
+        }
+        return baseSql + conditionStatement;
+    }
+
+    public String convertToDeleteById() {
+        String baseSql = "delete from `" + this.tableName + "` where id=%s";
+        Object idVal = fieldValueMap.get("id");
+        return String.format(baseSql, idVal);
     }
 }
