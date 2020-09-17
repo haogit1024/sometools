@@ -20,6 +20,8 @@ import java.util.*;
 public class TableRecordInfo {
     private String tableName;
 
+    private ArrayList<String> fieldList;
+
     /**
      * 其实可以直接用Map的, 脑抽设计错了，将错就错吧
      */
@@ -95,11 +97,12 @@ public class TableRecordInfo {
     }
 
     /**
-     * TableRecordInfo{tableName='abcde', fieldValueMap={k1:v1, k2:v2, k3:v3}}
+     * TableRecordInfo{tableName='abcde', fieldList=[a, b, c], fieldValueMap={k1:v1, k2:v2, k3:v3}}
      */
     @Override
     public String toString() {
-        final String baseString = "TableRecordInfo{tableName='%s', fieldValueMap={%s}}";
+        final String baseString = "TableRecordInfo{tableName='%s', fieldList=[%s], fieldValueMap={%s}}";
+        String fieldListString = Utils.listToString(fieldList, separator);
         StringBuilder valueBuilder = new StringBuilder();
         fieldValueMap.forEach((field, value) -> valueBuilder.append(field)
                 .append(": ").append(value.toString()).append(separator));
@@ -107,16 +110,18 @@ public class TableRecordInfo {
         if (!"".equals(valueString)) {
             valueString = valueString.substring(0, valueString.length() - separator.length());
         }
-        return String.format(baseString, this.tableName, valueString);
+        return String.format(baseString, this.tableName, fieldListString, valueString);
     }
 
     public TableRecordInfo(Object object) {
+        this.fieldList = new ArrayList<>();
         fieldValueMap = new LinkedHashMap<>();
         this.tableName = Utils.classNameToTableName(object.getClass().getName());
         Class<?> clazz = object.getClass();
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
-            String fieldName = field.getName();
+            String fieldName = Utils.toLine(field.getName());
+            this.fieldList.add(fieldName);
             if (!field.isAccessible()) {
                 field.setAccessible(true);
             }
@@ -147,12 +152,14 @@ public class TableRecordInfo {
         }
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
-            Object value = this.fieldValueMap.get(field.getName());
+            Object value = this.fieldValueMap.get(Utils.toLine(field.getName()));
             if (value != null) {
                 if (!field.isAccessible()) {
                     field.setAccessible(true);
                 }
                 try {
+                    // mysql 如果是tinyint(1), jdbc 返回的是boolean类型, 实体类也要用boolean类型
+                    // TODO jdbc 类型 -> java 类型转换器
                     field.set(t, value);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
@@ -174,7 +181,11 @@ public class TableRecordInfo {
             return null;
         }
         String baseSql = "select * from `" + this.tableName + "` ";
-        return baseSql + this.getConditionFromFieldValueMap();
+        String condition = this.getConditionFromFieldValueMap();
+        if (StringUtils.isNotBlank(condition)) {
+            baseSql += "where 1=1 " + condition;
+        }
+        return baseSql;
     }
 
     /**
@@ -185,7 +196,7 @@ public class TableRecordInfo {
         final String baseSql = "insert into `" + this.tableName + "` (%s) values(%s)";
         List<String> fieldList = this.getFieldListFromFieldValueMap();
         List<Object> valueList = this.getValueListFormFieldValueMap();
-        String fieldListString = Utils.listToString(fieldList, separator, brackets, true, false);
+        String fieldListString = Utils.listToString(fieldList, separator, brackets, false, false);
         String valueListString = Utils.listToString(valueList, separator, "", false, true);
         return String.format(baseSql, fieldListString, valueListString);
     }
@@ -205,7 +216,6 @@ public class TableRecordInfo {
         fieldList.removeAll(Arrays.asList(conditionFields));
         // 1. 生成 setStatement 2. 生成whereStatement
         String setStatement = getSetStatementFromFieldValueMap(fieldList);
-        System.out.println("setStatement : " + setStatement);
         String conditionStatement = getConditionFromFieldValueMap(conditionFields);
         if (StringUtils.isBlank(setStatement) || StringUtils.isBlank(conditionStatement)) {
             return null;
@@ -245,7 +255,6 @@ public class TableRecordInfo {
 
     /**
      * 生成 delete sql
-     * @param conditionFields
      * @return
      */
     public String convertToDeleteById() {

@@ -1,7 +1,10 @@
 package com.czh.util.orm;
 
+import com.czh.util.orm.entity.FileSize;
+import com.czh.util.util.PropertiesLoader;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -24,6 +27,31 @@ public class ORMDataBase {
     private String driver;
     private String url;
     private Connection connection;
+
+    /**
+     * 根据一个properties文件初始化，可以是resource的相对路径和绝对路径
+     * @param propertiesPath
+     */
+    public ORMDataBase(String propertiesPath) {
+        if (StringUtils.isBlank(propertiesPath)) {
+            System.err.println("读取数据库配置信息文件不能为空");
+            System.exit(0);
+        }
+        try {
+            PropertiesLoader loader = new PropertiesLoader(propertiesPath);
+            this.host = loader.getProperty("host");
+            this.port = loader.getProperty("port");
+            this.username = loader.getProperty("username");
+            this.password = loader.getProperty("password");
+            this.database = loader.getProperty("database");
+            this.driver = loader.getProperty("driver");
+            this.connection = this.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("读取配置文件出错");
+            System.exit(0);
+        }
+    }
 
     public ORMDataBase(String host, String port, String username, String password, String database, String driver) {
         this.host = host;
@@ -85,7 +113,9 @@ public class ORMDataBase {
     private ResultSet executeQuerySql(String sql) {
         try {
             PreparedStatement pst =  this.connection.prepareStatement(sql);
-            return pst.executeQuery();
+            ResultSet set = pst.executeQuery();
+            pst.close();
+            return set;
         } catch (SQLException e) {
             e.printStackTrace();
             System.err.println("运行sql出错，sql: " + sql);
@@ -94,9 +124,24 @@ public class ORMDataBase {
         }
     }
 
+    private int executeUpdateSql(String sql) {
+        try {
+            PreparedStatement pst =  this.connection.prepareStatement(sql);
+            int ret = pst.executeUpdate();
+            pst.close();
+            return ret;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("运行sql出错，sql: " + sql);
+            System.exit(0);
+            return 0;
+        }
+    }
+
     public <T> T selectOne(T t) throws SQLException {
         TableRecordInfo recordInfo = new TableRecordInfo(t);
         String sql = recordInfo.convertToSelectSql();
+        System.out.println("selectOne sql: " + sql);
         ResultSet resultSet = executeQuerySql(sql);
         if (resultSet == null || !resultSet.next()) {
             return null;
@@ -105,9 +150,10 @@ public class ORMDataBase {
         int columnCount = resultSetMetaData.getColumnCount();
         LinkedHashMap<String, Object> map = new LinkedHashMap<>(columnCount);
         for (int i = 1; i <= columnCount; i++) {
-            map.put(resultSetMetaData.getColumnClassName(i), resultSet.getObject(i));
+            map.put(resultSetMetaData.getColumnName(i), resultSet.getObject(i));
         }
         recordInfo.setFieldValueMap(map);
+        System.out.println(recordInfo);
         return recordInfo.convertToType((Class<T>)t.getClass());
     }
 
@@ -127,7 +173,7 @@ public class ORMDataBase {
             info.setTableName(tableName);
             LinkedHashMap<String, Object> map = new LinkedHashMap<>(columnCount);
             for (int i = 1; i <= columnCount; i++) {
-                map.put(resultSetMetaData.getColumnClassName(i), resultSet.getObject(i));
+                map.put(resultSetMetaData.getColumnName(i), resultSet.getObject(i));
             }
             info.setFieldValueMap(map);
             tableRecordInfoList.add(info);
@@ -135,5 +181,45 @@ public class ORMDataBase {
         return tableRecordInfoList.stream()
                 .map(tableRecordInfo -> tableRecordInfo.convertToType((Class<T>)t.getClass()))
                 .collect(Collectors.toList());
+    }
+
+    public <T>int insert(T t) {
+        TableRecordInfo recordInfo = new TableRecordInfo(t);
+        String sql = recordInfo.convertToInsertSql();
+        return this.executeUpdateSql(sql);
+    }
+
+    public <T>int update(T t, String... conditionField) {
+        TableRecordInfo recordInfo = new TableRecordInfo(t);
+        String sql = recordInfo.convertToUpdateSql(conditionField);
+        return this.executeUpdateSql(sql);
+    }
+
+    public <T>int updateById(T t) {
+        TableRecordInfo recordInfo = new TableRecordInfo(t);
+        String sql = recordInfo.convertToUpdateByIdSql();
+        return this.executeUpdateSql(sql);
+    }
+
+    public <T>int delete(T t, String... conditionField) {
+        TableRecordInfo recordInfo = new TableRecordInfo(t);
+        String sql = recordInfo.convertToDeleteSql(conditionField);
+        return this.executeUpdateSql(sql);
+    }
+
+    public <T>int deleteById(T t) {
+        TableRecordInfo recordInfo = new TableRecordInfo(t);
+        String sql = recordInfo.convertToDeleteById();
+        return this.executeUpdateSql(sql);
+    }
+
+    public void close() {
+        if (this.connection != null) {
+            try {
+                this.connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
