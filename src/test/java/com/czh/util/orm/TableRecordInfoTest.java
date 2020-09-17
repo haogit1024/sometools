@@ -11,7 +11,7 @@ public class TableRecordInfoTest extends TestCase {
                 .setParentDir("parentDir")
                 .setFilePath("filePath")
                 .setFileName("fileName")
-                .setFileSize(1)
+                .setFileSize(1L)
                 .setIsDir(1)
                 .setScanTime(1);
         TableRecordInfo tableRecordInfo = new TableRecordInfo(fileSize);

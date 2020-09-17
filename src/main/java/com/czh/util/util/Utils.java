@@ -1,5 +1,7 @@
 package com.czh.util.util;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -76,7 +78,8 @@ public class Utils {
             if (isSql) {
                 // 不是数值类型
                 if (!Utils.isNumber(item)) {
-                    itemString = "\"" + itemString + "\"";
+                    // TODO 高估了自己处理sql的能力, 后面需要优化下
+                    itemString = "\"" + StringEscapeUtils.escapeJava(itemString) + "\"";
                 }
             }
             sb.append(itemBrackets).append(itemString).append(itemBrackets).append(separator);

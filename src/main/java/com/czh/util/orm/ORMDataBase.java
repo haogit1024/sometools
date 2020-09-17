@@ -128,7 +128,7 @@ public class ORMDataBase {
         try {
             PreparedStatement pst =  this.connection.prepareStatement(sql);
             int ret = pst.executeUpdate();
-            pst.close();
+//            pst.close();
             return ret;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -141,9 +141,14 @@ public class ORMDataBase {
     public <T> T selectOne(T t) throws SQLException {
         TableRecordInfo recordInfo = new TableRecordInfo(t);
         String sql = recordInfo.convertToSelectSql();
-        System.out.println("selectOne sql: " + sql);
         ResultSet resultSet = executeQuerySql(sql);
-        if (resultSet == null || !resultSet.next()) {
+        if (resultSet == null) {
+            return null;
+        }
+        if (resultSet.isClosed()) {
+            return null;
+        }
+        if (!resultSet.next()) {
             return null;
         }
         ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
@@ -153,7 +158,7 @@ public class ORMDataBase {
             map.put(resultSetMetaData.getColumnName(i), resultSet.getObject(i));
         }
         recordInfo.setFieldValueMap(map);
-        System.out.println(recordInfo);
+        resultSet.close();
         return recordInfo.convertToType((Class<T>)t.getClass());
     }
 
@@ -178,6 +183,7 @@ public class ORMDataBase {
             info.setFieldValueMap(map);
             tableRecordInfoList.add(info);
         }
+        resultSet.close();
         return tableRecordInfoList.stream()
                 .map(tableRecordInfo -> tableRecordInfo.convertToType((Class<T>)t.getClass()))
                 .collect(Collectors.toList());
@@ -186,6 +192,7 @@ public class ORMDataBase {
     public <T>int insert(T t) {
         TableRecordInfo recordInfo = new TableRecordInfo(t);
         String sql = recordInfo.convertToInsertSql();
+//        System.out.println("insert sql: " + sql);
         return this.executeUpdateSql(sql);
     }
 
