@@ -2,7 +2,6 @@
 ## python 模块
 ```shell script
 pip install requests
-pip install lxml
 pip install beautifulsoup4
 ```
 
