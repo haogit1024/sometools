@@ -27,6 +27,10 @@ public class ORMDataBase {
     private String driver;
     private String url;
     private Connection connection;
+    private final int maxConnectionNum = 20;
+    private List<Connection> connectionList = new ArrayList<>(maxConnectionNum);
+    private int connListIndex = 0;
+    private boolean isPower = false;
 
     /**
      * 根据一个properties文件初始化，可以是resource的相对路径和绝对路径
@@ -110,9 +114,49 @@ public class ORMDataBase {
         return null;
     }
 
+    public boolean isPower() {
+        return isPower;
+    }
+
+    public synchronized void setPower(boolean power) {
+        if (power) {
+            // 开启性能模式，创建数据库连接池
+            for (int i = 0; i < maxConnectionNum; i++) {
+                this.connectionList.add(this.connect());
+            }
+        } else {
+            // 关闭性能模式，关闭连接池
+            this.connectionList.forEach((conn) -> {
+                try {
+                    if (conn != null && !conn.isClosed()) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+            connectionList = new ArrayList<>(maxConnectionNum);
+        }
+        isPower = power;
+    }
+
+    private synchronized Connection getConnection() {
+        Connection res;
+        if (isPower()) {
+            res = this.connectionList.get(connListIndex);
+            this.connListIndex++;
+            if (this.connListIndex == this.connectionList.size()) {
+                this.connListIndex = 0;
+            }
+        } else {
+            res = this.connection;
+        }
+        return res;
+    }
+
     private ResultSet executeQuerySql(String sql) {
         try {
-            PreparedStatement pst =  this.connection.prepareStatement(sql);
+            PreparedStatement pst =  this.getConnection().prepareStatement(sql);
             ResultSet set = pst.executeQuery();
             pst.close();
             return set;
@@ -126,7 +170,7 @@ public class ORMDataBase {
 
     private int executeUpdateSql(String sql) {
         try {
-            PreparedStatement pst =  this.connection.prepareStatement(sql);
+            PreparedStatement pst = this.getConnection().prepareStatement(sql);
             int ret = pst.executeUpdate();
 //            pst.close();
             return ret;

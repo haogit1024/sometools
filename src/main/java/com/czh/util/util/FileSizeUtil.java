@@ -18,7 +18,7 @@ public class FileSizeUtil {
     private static final ORMDataBase orm = new ORMDataBase("db.properties");
     private static final String FILE_SYSTEM = "tc-win";
     private static final Integer SCAN_TIME = (int)(new Date().getTime() / 1000);
-    private static final ExecutorService executor = Executors.newFixedThreadPool(5000);
+    private static final ExecutorService executor = Executors.newFixedThreadPool(10000);
 
     public static long getSizeFromDir(String dirPath) {
         return getSizeFromDir(new File(dirPath));
@@ -47,6 +47,9 @@ public class FileSizeUtil {
             ret+=size;
             final FileSize fileSize = new FileSize(FILE_SYSTEM, file.getParent(), file.getAbsolutePath(), file.getName(), size, isDir, SCAN_TIME);
             executor.submit(() -> saveOrUpdate(fileSize));
+            /*new Thread(() -> {
+                saveOrUpdate(fileSize);
+            }).start();*/
         }
         return ret;
     }
@@ -71,19 +74,28 @@ public class FileSizeUtil {
     }
 
     public static void main(String[] args) {
-//        long ret = getSizeFromDir("D:\\tc_codes\\etc-pay-platform\\app-api\\target");
+        orm.setPower(true);
         long startTime = System.currentTimeMillis();
         long ret = getSizeFromDir("D:\\tc_codes");
+//        long ret = getSizeFromDir("C:\\Users\\admin");
+        long scanEndTime = System.currentTimeMillis();
+//        long ret = getSizeFromDir("D:\\czhcode\\github\\java\\simple");
         System.out.println(ret);
+        System.out.println("扫描耗时: " + ((scanEndTime - startTime) / 1000) + " 秒");
         executor.shutdown();
         try {
-            executor.awaitTermination(10, TimeUnit.MINUTES);
+            executor.awaitTermination(10, TimeUnit.HOURS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        long endTime = System.currentTimeMillis();
+        long saveEndTime = System.currentTimeMillis();
         System.out.println("保存结束");
-        System.out.println("耗时: " + ((endTime - startTime) / 1000) + " 秒");
+        System.out.println("耗时: " + ((saveEndTime - startTime) / 1000) + " 秒");
 //        orm.close();
+//        try {
+//            Thread.sleep(1000 * 60 * 60);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 }

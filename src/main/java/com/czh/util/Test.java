@@ -12,12 +12,9 @@ import java.time.format.DateTimeFormatter;
 public class Test {
 
 	public static void main(String[] args) throws IOException {
-		File file = new File("D:\\tc_codes\\etc-pay-platform");
-		System.out.println(file.getParent());
-		System.out.println(file.getAbsolutePath());
-		System.out.println(file.getCanonicalPath());
-		String str = "\"";
-		System.out.println(StringEscapeUtils.escapeJava(str));
+		long l = 66760424535L;
+		double k = 1024.0;
+		System.out.println(l / k / k / k);
 	}
 
 }
