@@ -5,7 +5,6 @@ import com.czh.util.orm.entity.FileSize;
 
 import java.io.File;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,10 +14,11 @@ import java.util.concurrent.TimeUnit;
  * @date 2020/9/17
  */
 public class FileSizeUtil {
-    private static final ORMDataBase orm = new ORMDataBase("db.properties");
+    private static final ORMDataBase orm = new ORMDataBase("mydb.properties");
     private static final String FILE_SYSTEM = "tc-win";
-    private static final Integer SCAN_TIME = (int)(new Date().getTime() / 1000);
-    private static final ExecutorService executor = Executors.newFixedThreadPool(10000);
+    private static final Integer SCAN_TIME = (int)(System.currentTimeMillis() / 1000);
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(2000);
+    private static int fileNum = 0;
 
     public static long getSizeFromDir(String dirPath) {
         return getSizeFromDir(new File(dirPath));
@@ -34,6 +34,7 @@ public class FileSizeUtil {
         }
         long ret = 0;
         for (File file : tempFiles) {
+            fileNum++;
             long size;
             int isDir;
             if (file.isDirectory()) {
@@ -46,7 +47,7 @@ public class FileSizeUtil {
 //            System.out.println("size: " + size);
             ret+=size;
             final FileSize fileSize = new FileSize(FILE_SYSTEM, file.getParent(), file.getAbsolutePath(), file.getName(), size, isDir, SCAN_TIME);
-            executor.submit(() -> saveOrUpdate(fileSize));
+            EXECUTOR.submit(() -> saveOrUpdate(fileSize));
             /*new Thread(() -> {
                 saveOrUpdate(fileSize);
             }).start();*/
@@ -81,10 +82,11 @@ public class FileSizeUtil {
         long scanEndTime = System.currentTimeMillis();
 //        long ret = getSizeFromDir("D:\\czhcode\\github\\java\\simple");
         System.out.println(ret);
+        System.out.println(fileNum);
         System.out.println("扫描耗时: " + ((scanEndTime - startTime) / 1000) + " 秒");
-        executor.shutdown();
+        EXECUTOR.shutdown();
         try {
-            executor.awaitTermination(10, TimeUnit.HOURS);
+            EXECUTOR.awaitTermination(10, TimeUnit.HOURS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

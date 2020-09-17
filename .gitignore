@@ -5,3 +5,5 @@
 .idea
 .settings
 .vscode
+# test config file
+src/main/resources/mydb.properties
