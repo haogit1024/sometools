@@ -18,7 +18,7 @@ public class FileSizeUtil {
     private static final ORMDataBase orm = new ORMDataBase("db.properties");
     private static final String FILE_SYSTEM = "tc-win";
     private static final Integer SCAN_TIME = (int)(new Date().getTime() / 1000);
-    private static final ExecutorService executor = Executors.newFixedThreadPool(2000);
+    private static final ExecutorService executor = Executors.newFixedThreadPool(5000);
 
     public static long getSizeFromDir(String dirPath) {
         return getSizeFromDir(new File(dirPath));
@@ -45,7 +45,6 @@ public class FileSizeUtil {
             }
 //            System.out.println("size: " + size);
             ret+=size;
-            // TODO 生成 fileSize 异步保存到数据库
             final FileSize fileSize = new FileSize(FILE_SYSTEM, file.getParent(), file.getAbsolutePath(), file.getName(), size, isDir, SCAN_TIME);
             executor.submit(() -> saveOrUpdate(fileSize));
         }
