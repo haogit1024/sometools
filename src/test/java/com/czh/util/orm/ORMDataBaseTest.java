@@ -22,15 +22,24 @@ public class ORMDataBaseTest extends TestCase {
     }
 
     public void testInsert() {
+        FileSize newSize = new FileSize("2", "2", "2", "2", 2, 2, 2);
+        int ret = orm.insert(newSize);
+        System.out.println(ret );
     }
 
     public void testUpdate() {
+        FileSize newSize = new FileSize("2", "2", "2", "2", 3, 3, 3);
+        int ret = orm.update(newSize, "file_system", "file_path");
+        System.out.println(ret);
     }
 
     public void testUpdateById() {
     }
 
     public void testDelete() {
+        FileSize newSize = new FileSize("2", "2", "2", "2", 3, 3, 3);
+        int ret = orm.delete(newSize);
+        System.out.println(ret);
     }
 
     public void testDeleteById() {

@@ -241,12 +241,11 @@ public class TableRecordInfo {
 
     /**
      * 生成 delete sql
-     * @param conditionFields
      * @return
      */
-    public String convertToDeleteSql(String... conditionFields) {
+    public String convertToDeleteSql() {
         String baseSql = "delete from `" + this.tableName + "` where 1=1 ";
-        String conditionStatement = getConditionFromFieldValueMap(conditionFields);
+        String conditionStatement = getConditionFromFieldValueMap();
         if (StringUtils.isBlank(conditionStatement)) {
             return null;
         }

@@ -18,6 +18,6 @@ public class TableRecordInfoTest extends TestCase {
         System.out.println(tableRecordInfo.convertToSelectSql());
         System.out.println(tableRecordInfo.convertToInsertSql());
         System.out.println(tableRecordInfo.convertToUpdateSql("file_system", "parent_dir"));
-        System.out.println(tableRecordInfo.convertToDeleteSql("file_system", "parent_dir"));
+        System.out.println(tableRecordInfo.convertToDeleteSql());
     }
 }

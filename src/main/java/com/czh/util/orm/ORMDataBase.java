@@ -201,9 +201,9 @@ public class ORMDataBase {
         return this.executeUpdateSql(sql);
     }
 
-    public <T>int delete(T t, String... conditionField) {
+    public <T>int delete(T t) {
         TableRecordInfo recordInfo = new TableRecordInfo(t);
-        String sql = recordInfo.convertToDeleteSql(conditionField);
+        String sql = recordInfo.convertToDeleteSql();
         return this.executeUpdateSql(sql);
     }
 
