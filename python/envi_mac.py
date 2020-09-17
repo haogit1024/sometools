@@ -3,9 +3,7 @@
 
 """ 一个搭建编程环境脚本脚本 """
 
-import platform
-
-os_type = platform.system()
+# os_type = platform.system()
 
 def java():
     """

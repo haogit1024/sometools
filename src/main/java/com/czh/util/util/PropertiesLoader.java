@@ -12,7 +12,7 @@ import java.util.*;
  * @author czh
  */
 public class PropertiesLoader {
-    private Properties properties;
+    private final Properties properties;
 
     /**
      * 根据一个路径初始化，可以是resource的相对路径和绝对路径
@@ -20,7 +20,7 @@ public class PropertiesLoader {
      * @throws IOException
      */
     public PropertiesLoader(String filePath) throws IOException {
-        assert (StringUtils.isBlank(filePath)) : "读取的配置文件路径不能为空";
+        assert (StringUtils.isNotBlank(filePath)) : "读取的配置文件路径不能为空";
         InputStream inputStream;
         if (filePath.contains(File.separator)) {
             // 绝对路径
