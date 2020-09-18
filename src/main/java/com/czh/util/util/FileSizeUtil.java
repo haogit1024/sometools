@@ -19,6 +19,7 @@ public class FileSizeUtil {
     private static final Integer SCAN_TIME = (int)(System.currentTimeMillis() / 1000);
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(2000);
     private static int fileNum = 0;
+    private static final boolean isSaveDb = false;
 
     public static long getSizeFromDir(String dirPath) {
         return getSizeFromDir(new File(dirPath));
@@ -47,10 +48,9 @@ public class FileSizeUtil {
 //            System.out.println("size: " + size);
             ret+=size;
             final FileSize fileSize = new FileSize(FILE_SYSTEM, file.getParent(), file.getAbsolutePath(), file.getName(), size, isDir, SCAN_TIME);
-            EXECUTOR.submit(() -> saveOrUpdate(fileSize));
-            /*new Thread(() -> {
-                saveOrUpdate(fileSize);
-            }).start();*/
+            if (isSaveDb) {
+                EXECUTOR.submit(() -> saveOrUpdate(fileSize));
+            }
         }
         return ret;
     }
@@ -75,10 +75,12 @@ public class FileSizeUtil {
     }
 
     public static void main(String[] args) {
-        orm.setPower(true);
+        if (isSaveDb) {
+            orm.setPower(true);
+        }
         long startTime = System.currentTimeMillis();
-        long ret = getSizeFromDir("D:\\tc_codes");
-//        long ret = getSizeFromDir("C:\\Users\\admin");
+//        long ret = getSizeFromDir("D:\\tc_codes");
+        long ret = getSizeFromDir("C:\\Users\\admin");
         long scanEndTime = System.currentTimeMillis();
 //        long ret = getSizeFromDir("D:\\czhcode\\github\\java\\simple");
         System.out.println(ret);
@@ -93,11 +95,6 @@ public class FileSizeUtil {
         long saveEndTime = System.currentTimeMillis();
         System.out.println("保存结束");
         System.out.println("耗时: " + ((saveEndTime - startTime) / 1000) + " 秒");
-//        orm.close();
-//        try {
-//            Thread.sleep(1000 * 60 * 60);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        orm.close();
     }
 }

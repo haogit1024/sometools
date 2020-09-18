@@ -1,6 +1,5 @@
 package com.czh.util.orm;
 
-import com.czh.util.orm.entity.FileSize;
 import com.czh.util.util.PropertiesLoader;
 import org.apache.commons.lang3.StringUtils;
 
@@ -271,6 +270,17 @@ public class ORMDataBase {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        }
+        if (this.connectionList.size() > 0) {
+            this.connectionList.forEach(conn -> {
+                try {
+                    if (!conn.isClosed()) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 }
