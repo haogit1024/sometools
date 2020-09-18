@@ -21,6 +21,11 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.16</version>
         </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>3.3.0</version>
+        </dependency>
         <!-- 加解密包 -->
 <!--        <dependency>-->
 <!--            <groupId>commons-codec</groupId>-->
