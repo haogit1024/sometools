@@ -26,7 +26,7 @@ public class ORMDataBase {
     private String driver;
     private String url;
     private Connection connection;
-    private final int maxConnectionNum = 20;
+    private final int maxConnectionNum = 80;
     private List<Connection> connectionList = new ArrayList<>(maxConnectionNum);
     private int connListIndex = 0;
     private boolean isPower = false;

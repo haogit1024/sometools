@@ -19,7 +19,7 @@ public class FileSizeUtil {
     private static final Integer SCAN_TIME = (int)(System.currentTimeMillis() / 1000);
     private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(2000);
     private static int fileNum = 0;
-    private static final boolean isSaveDb = false;
+    private static final boolean isSaveDb = true;
 
     public static long getSizeFromDir(String dirPath) {
         return getSizeFromDir(new File(dirPath));
@@ -56,7 +56,7 @@ public class FileSizeUtil {
     }
 
     public static void saveOrUpdate(FileSize fileSize) {
-        try {
+        /*try {
             FileSize selectCondition = new FileSize();
             selectCondition.setFileSystem(FILE_SYSTEM).setFilePath(fileSize.getFilePath());
             FileSize oldFileSize = orm.selectOne(selectCondition);
@@ -71,7 +71,8 @@ public class FileSizeUtil {
 //            System.out.println("ret: " + ret);
         } catch (SQLException e) {
             e.printStackTrace();
-        }
+        }*/
+        orm.insert(fileSize);
     }
 
     public static void main(String[] args) {
@@ -80,7 +81,7 @@ public class FileSizeUtil {
         }
         long startTime = System.currentTimeMillis();
 //        long ret = getSizeFromDir("D:\\tc_codes");
-        long ret = getSizeFromDir("C:\\Users\\admin");
+        long ret = getSizeFromDir("C:\\Users");
         long scanEndTime = System.currentTimeMillis();
 //        long ret = getSizeFromDir("D:\\czhcode\\github\\java\\simple");
         System.out.println(ret);
