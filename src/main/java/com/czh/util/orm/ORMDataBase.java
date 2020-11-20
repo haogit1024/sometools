@@ -181,6 +181,31 @@ public class ORMDataBase {
         }
     }
 
+    public <T, R>Integer selectId(T t) throws SQLException {
+        TableRecordInfo recordInfo = new TableRecordInfo(t);
+        String sql = recordInfo.convertToSelectSql();
+        ResultSet resultSet = executeQuerySql(sql);
+        if (resultSet == null) {
+            return null;
+        }
+        if (resultSet.isClosed()) {
+            return null;
+        }
+        if (!resultSet.next()) {
+            return null;
+        }
+        ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+        int columnCount = resultSetMetaData.getColumnCount();
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>(columnCount);
+        for (int i = 1; i <= columnCount; i++) {
+            map.put(resultSetMetaData.getColumnName(i), resultSet.getObject(i));
+        }
+        recordInfo.setFieldValueMap(map);
+        resultSet.close();
+        Object idValue = map.get("id");
+        return idValue == null ? null : Integer.valueOf(idValue.toString());
+    }
+
     public <T> T selectOne(T t) throws SQLException {
         TableRecordInfo recordInfo = new TableRecordInfo(t);
         String sql = recordInfo.convertToSelectSql();

@@ -17,11 +17,11 @@ public class FileSizeUtil {
     private static final ORMDataBase orm = new ORMDataBase("mydb.properties");
     private static final String FILE_SYSTEM = "tc-win";
     private static final Integer SCAN_TIME = (int)(System.currentTimeMillis() / 1000);
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(100);
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(2500);
     private static int fileNum = 0;
-    private static final boolean isSaveDb = false;
-    private static final RedisUtil redisUtil = new RedisUtil("192.168.20.44", 6379);
-    private static final boolean isSaveCache = true;
+    private static final boolean isSaveDb = true;
+    private static final RedisUtil redisUtil = new RedisUtil("192.168.20.250", 6379);
+    private static final boolean isSaveCache = false;
 
     public static long getSizeFromDir(String dirPath) {
         return getSizeFromDir(new File(dirPath));
@@ -36,40 +36,62 @@ public class FileSizeUtil {
             return 0;
         }
         long ret = 0;
-        for (File file : tempFiles) {
-            fileNum++;
-            long size;
-            int isDir;
-            if (file.isDirectory()) {
-                size = getSizeFromDir(file);
-                isDir = 1;
-            } else {
-                size = file.length();
-                isDir = 0;
-            }
+        try {
+            for (File file : tempFiles) {
+                fileNum++;
+                long size;
+                int isDir;
+                if (file.isDirectory()) {
+                    size = getSizeFromDir(file);
+                    isDir = 1;
+                } else {
+                    size = file.length();
+                    isDir = 0;
+                }
 //            System.out.println("size: " + size);
-            ret+=size;
-            final FileSize fileSize = new FileSize(FILE_SYSTEM, file.getParent(), file.getAbsolutePath(), file.getName(), size, isDir, SCAN_TIME);
-            if (isSaveDb) {
-                EXECUTOR.submit(() -> saveOrUpdate(fileSize));
+                ret+=size;
+                final FileSize fileSize = new FileSize(FILE_SYSTEM, file.getParent(), file.getAbsolutePath(), file.getName(), size, isDir, SCAN_TIME);
+                if (isSaveDb) {
+//                    EXECUTOR.submit(() -> saveOrUpdate(fileSize));
+//                    EXECUTOR.submit(() -> save(fileSize));
+                    EXECUTOR.submit(() -> selectId(fileSize));
+                }
+                if (isSaveCache) {
+                    EXECUTOR.submit(() -> redisUtil.set("file:" + fileSize.getFilePath(), fileSize.toString(), 1000));
+                }
             }
-            if (isSaveCache) {
-                EXECUTOR.submit(() -> redisUtil.set("file:" + fileSize.getFilePath(), fileSize.toString(), 1000));
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("读取文件大小出错啦");
         }
         return ret;
+    }
+
+    public static void selectId(FileSize fileSize) {
+        FileSize selectCondition = new FileSize();
+        selectCondition.setFileSystem(FILE_SYSTEM).setFilePath(fileSize.getFilePath());
+        try {
+            orm.selectOne(selectCondition);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    public static void save(FileSize fileSize) {
+        orm.insert(fileSize);
     }
 
     public static void saveOrUpdate(FileSize fileSize) {
         try {
             FileSize selectCondition = new FileSize();
             selectCondition.setFileSystem(FILE_SYSTEM).setFilePath(fileSize.getFilePath());
-            FileSize oldFileSize = orm.selectOne(selectCondition);
+            Integer id = orm.selectId(fileSize);
             int ret;
-            if (oldFileSize == null) {
+            if (id == null) {
                 // insert
                 ret = orm.insert(fileSize);
             } else {
+                System.out.println("updateDate.......");
                 // update
                 ret = orm.update(fileSize, "file_system", "file_path");
             }
@@ -85,8 +107,9 @@ public class FileSizeUtil {
             orm.setPower(true);
         }
         long startTime = System.currentTimeMillis();
+        long ret = getSizeFromDir("D:\\tc_codes\\etc-pay-platform");
 //        long ret = getSizeFromDir("D:\\tc_codes");
-        long ret = getSizeFromDir("D:\\czhcode\\github\\java\\simple");
+//        long ret = getSizeFromDir("C:");
         long scanEndTime = System.currentTimeMillis();
 //        long ret = getSizeFromDir("D:\\czhcode\\github\\java\\simple");
         System.out.println(ret);
@@ -94,7 +117,7 @@ public class FileSizeUtil {
         System.out.println("扫描耗时: " + ((scanEndTime - startTime) / 1000) + " 秒");
         EXECUTOR.shutdown();
         try {
-            EXECUTOR.awaitTermination(1, TimeUnit.MINUTES);
+            EXECUTOR.awaitTermination(100, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
