@@ -53,8 +53,8 @@ public class FileSizeUtil {
                 final FileSize fileSize = new FileSize(FILE_SYSTEM, file.getParent(), file.getAbsolutePath(), file.getName(), size, isDir, SCAN_TIME);
                 if (isSaveDb) {
 //                    EXECUTOR.submit(() -> saveOrUpdate(fileSize));
-//                    EXECUTOR.submit(() -> save(fileSize));
-                    EXECUTOR.submit(() -> selectId(fileSize));
+                    EXECUTOR.submit(() -> save(fileSize));
+//                    EXECUTOR.submit(() -> selectId(fileSize));
                 }
                 if (isSaveCache) {
                     EXECUTOR.submit(() -> redisUtil.set("file:" + fileSize.getFilePath(), fileSize.toString(), 1000));
@@ -107,9 +107,9 @@ public class FileSizeUtil {
             orm.setPower(true);
         }
         long startTime = System.currentTimeMillis();
-        long ret = getSizeFromDir("D:\\tc_codes\\etc-pay-platform");
+//        long ret = getSizeFromDir("D:\\tc_codes\\etc-pay-platform");
 //        long ret = getSizeFromDir("D:\\tc_codes");
-//        long ret = getSizeFromDir("C:");
+        long ret = getSizeFromDir("C:");
         long scanEndTime = System.currentTimeMillis();
 //        long ret = getSizeFromDir("D:\\czhcode\\github\\java\\simple");
         System.out.println(ret);

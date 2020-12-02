@@ -1,12 +1,11 @@
 package com.czh.util.orm;
 
 import com.czh.util.orm.entity.FileSize;
-import junit.framework.TestCase;
 
 import java.sql.SQLException;
 import java.util.List;
 
-public class ORMDataBaseTest extends TestCase {
+public class ORMDataBaseTest  {
     ORMDataBase orm = new ORMDataBase("db.properties");
     FileSize fileSize = new FileSize("1", null, "1", null, null, null, null);
 

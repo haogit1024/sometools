@@ -1,9 +1,8 @@
 package com.czh.util.orm;
 
 import com.czh.util.orm.entity.FileSize;
-import junit.framework.TestCase;
 
-public class TableRecordInfoTest extends TestCase {
+public class TableRecordInfoTest {
 
     public void testConvertToType() {
         FileSize fileSize = new FileSize();

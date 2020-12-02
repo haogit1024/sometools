@@ -1,8 +1,7 @@
 package com.czh.util.util;
 
-import junit.framework.TestCase;
 
-public class RedisUtilTest extends TestCase {
+public class RedisUtilTest {
     RedisUtil redisUtil = new RedisUtil("192.168.20.44", 6379);
 
     public void testGet() {
