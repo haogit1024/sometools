@@ -177,7 +177,10 @@ class Downloader(object):
 if __name__ == '__main__':
     downloader = Downloader()
     # downloader.download_node('Linux')
-    # downloader.download_maven()
-    downloader.download_toolbox('linux')
+    # downloader.download_node('Windows')
+    downloader.download_maven()
+    # downloader.download_toolbox('linux')
+    # downloader.download_toolbox('Windows')
     # downloader.download_adopt_open_jdk(r'8', r'jdk', r'Linux')
+    downloader.download_adopt_open_jdk(r'8', r'jdk', r'Windows')
     print('运行完成')

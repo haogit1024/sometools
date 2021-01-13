@@ -26,5 +26,9 @@ def main():
 if __name__ == "__main__":
     # main()
     chrome = WindowsChrome(is_enable_request_cache=True)
-    chrome.get(r'https://www.baidu.com')
-    chrome.get(r'https://www.baidu.com')
+    # chrome.get(r'https://www.baidu.com')
+    # chrome.get(r'https://www.baidu.com')
+    print(platform.system())
+    # 47109/21390448
+    print(47109/21390448)
+    print('%s %%' % 'a')

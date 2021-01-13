@@ -34,6 +34,9 @@ class DownloadUtil(object):
         self.download_cache_path = download_cache_path
         m = Manager()
         self.__download_status_dict = m.dict()
+        requests.DEFAULT_RETRIES = 5
+        self.__session = requests.session()
+        self.__session.keep_alive = False
 
     def download(self, http_url: str, save_path: str, alias=None):
         # 创建缓存文件夹
@@ -94,7 +97,7 @@ class DownloadUtil(object):
         # 一次下载10k
         end_byte = start_byte + download_size * 1024
         range = 'bytes={start}-{end}'.format(start=start_byte, end=end_byte)
-        log.info("Range: " + range)
+        log.info("Request Range: " + range)
         headers = {"Range": range}
         now_time = time.time()
         try:
@@ -102,13 +105,14 @@ class DownloadUtil(object):
             req_time_util = 2000
             req_start_time = int(round(now_time * 1000))
             try:
-                response = requests.get(http_url, headers=headers)
+                response = self.__session.get(http_url, headers=headers)
             except Exception as e:
                 log.error(str(e))
                 log.error("下载出错, url: " + http_url)
                 cache_data['fail_num'] = cache_data['fail_num'] + 1
                 cache_data['status'] = 'fail'
-                self.__write_cache(cache_data)
+                cache_data['error_msg'] = repr(e)
+                self.__write_cache(cache_path, cache_data)
                 return
             # 计算下载需要的时间，适当提高下载速度。目前以2秒为一个下载区间
             req_end_time = int(round(time.time() * 1000))
@@ -116,14 +120,20 @@ class DownloadUtil(object):
             # 根据响应头计算download_size
             #                         bytes 0-10/1560323
             response_content_range = response.headers['Content-Range']
-            log.info("Content-Range: " + response_content_range)
+            log.info("Response Content-Range: " + response_content_range)
             file_length, rel_start_byte, rel_end_byte = self.__parse_content_range(response_content_range)
-            #                           bytes 0-10/1560323
+            #                           bytes 13412480-13412480/21390448
+            # 获取下载百分比
+            download_rate = (rel_end_byte / file_length) * 100
             cache_data['length'] = file_length
             log.info(http_url + ", download_size: " + str(download_size))
             log.info(http_url + ", download_use_time: " + str(use_time))
+            # 下载速度
             download_speed = int(((rel_end_byte - rel_start_byte) / 1000) / (use_time / 1000))
+            # 剩余下载时间
+
             log.info("%s, download_speed: %d k/s" % (http_url, download_speed))
+            log.info("%s, download_rate: %.2f %%" % (http_url, download_rate))
             if use_time < req_time_util:
                 # 提速
                 speed = req_time_util / use_time
@@ -132,6 +142,10 @@ class DownloadUtil(object):
                 # 降速
                 speed = use_time / req_time_util
                 download_size = int(download_size / speed)
+            # 这里有个bug，如果有一次download_size = 0 就永远就下载不了文件了
+            if download_size == 0:
+                log.info('%s, 下载速度为0, 重新调整下载熟读' % http_url)
+                download_size = 5
         except Exception as e:
             logging.exception(e)
             log.error('下载错误' + http_url)
@@ -317,11 +331,11 @@ class WindowsChrome(BaseHttpClient):
     def __get_cache(self, url: str) -> bytes:
         cache_file = os.path.join(self.request_cache_path, md5(url))
 
-        now = time.time()
-        cache_create_time = os.path.getctime(cache_file)
-        # log.info("now %s, cache_create_time %s, diff %s", str(now), str(cache_create_time), str(now - cache_create_time))
-        if now - cache_create_time < self.request_cache_effective_time:
-            if os.path.exists(cache_file):
+        if os.path.exists(cache_file):
+            now = time.time()
+            cache_create_time = os.path.getctime(cache_file)
+            # log.info("now %s, cache_create_time %s, diff %s", str(now), str(cache_create_time), str(now - cache_create_time))
+            if now - cache_create_time < self.request_cache_effective_time:
                 with open(cache_file, 'rb') as f:
                     log.info('开始读取缓存文件, url：' + url + ", cache_file: " + cache_file)
                     return f.read()
