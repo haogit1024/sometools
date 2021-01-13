@@ -129,11 +129,12 @@ class DownloadUtil(object):
             log.info(http_url + ", download_size: " + str(download_size))
             log.info(http_url + ", download_use_time: " + str(use_time))
             # 下载速度
-            download_speed = int(((rel_end_byte - rel_start_byte) / 1000) / (use_time / 1000))
-            # 剩余下载时间
-
+            download_speed = int(((rel_end_byte - rel_start_byte) / 1024) / (use_time / 1000))
+            # 剩余下载时间(单位秒)
+            download_remaining_time = int((file_length - rel_end_byte) / 1024 / download_speed)
             log.info("%s, download_speed: %d k/s" % (http_url, download_speed))
             log.info("%s, download_rate: %.2f %%" % (http_url, download_rate))
+            log.info("%s, download_remaining_time: %d" % (http_url, download_remaining_time))
             if use_time < req_time_util:
                 # 提速
                 speed = req_time_util / use_time
