@@ -308,4 +308,11 @@ public class ORMDataBase {
             });
         }
     }
+
+    public void test() throws SQLException {
+        ResultSet set = getConnection().getMetaData().getCatalogs();
+        while (set.next()) {
+            System.out.println(set.getObject("TABLE_CAT"));
+        }
+    }
 }

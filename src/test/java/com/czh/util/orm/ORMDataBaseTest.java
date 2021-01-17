@@ -1,18 +1,21 @@
 package com.czh.util.orm;
 
 import com.czh.util.orm.entity.FileSize;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.util.List;
 
 public class ORMDataBaseTest  {
-    ORMDataBase orm = new ORMDataBase("db.properties");
+    ORMDataBase orm = new ORMDataBase("mydb.properties");
     FileSize fileSize = new FileSize("1", null, "1", null, null, null, null);
 
+    @Test
     public void testSelectOne() throws SQLException {
-        fileSize.setFileSystem("1").setFilePath("1");
-        FileSize size = orm.selectOne(fileSize);
-        System.out.println(size);
+//        fileSize.setFileSystem("1").setFilePath("1");
+//        FileSize size = orm.selectOne(fileSize);
+//        System.out.println(size);
+        orm.test();
     }
 
     public void testSelectList() throws SQLException {

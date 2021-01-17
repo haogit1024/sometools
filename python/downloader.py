@@ -32,6 +32,13 @@ class Downloader(object):
     def download_maven(self):
         """
         下载maven
+        maven 阿里云配置
+        <mirror>
+          <id>nexus-aliyun</id>
+          <mirrorOf>central</mirrorOf>
+          <name>Nexus aliyun</name>
+          <url>http://maven.aliyun.com/nexus/content/groups/public</url>
+        </mirror>
         :return: maven压缩包地址
         """
         base_url = r'http://mirror.bit.edu.cn/apache/maven/maven-3/%s/binaries/apache-maven-%s-bin.tar.gz'

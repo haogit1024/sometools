@@ -8,25 +8,26 @@ import platform
 import os
 
 
+downloader = Downloader()
+
+
 def java():
     """
     根据操作系统类型搭建java开发环境, fuck oracle
     """
-    pass
+    jdk_path = downloader.download_adopt_open_jdk(r'8', r'jdk', r'Windows')
+    os.system('start ' + jdk_path)
+    maven_path = downloader.download_maven()
+    
 
 
 def node_vue():
     """
     根据操作系统类型搭建vue开发环境
     """
-    downloader = Downloader()
     node_path = downloader.download_node(platform.system())
     # 运行node
     os.system(r'start ' + node_path)
-    # 安装cnpm, vue
-    os.system(r'npm install -g cnpm --registry=https://registry.npm.taobao.org')
-    os.system(r'npm install -g @vue/cli')
-    
 
 
 def main():
