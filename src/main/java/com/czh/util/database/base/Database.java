@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * @author czh
+ * TODO 添加postgreSql的支持
  * 该对象初始化(new)完成后, 所有的private 和 public 方法均可直接调用, 无需前置条件
  */
 public class Database {
