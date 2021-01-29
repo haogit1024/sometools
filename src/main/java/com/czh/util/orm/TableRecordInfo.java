@@ -169,6 +169,18 @@ public class TableRecordInfo {
         return t;
     }
 
+    public String convertToSelectOneSql() {
+        if (StringUtils.isBlank(this.tableName)) {
+            return null;
+        }
+        String baseSql = "select id from `" + this.tableName + "` ";
+        String condition = this.getConditionFromFieldValueMap();
+        if (StringUtils.isNotBlank(condition)) {
+            baseSql += "where 1=1 " + condition;
+        }
+        return baseSql;
+    }
+
     /**
      * 转换成查询语句, fieldValueMap不为空的值为条件
      * 当fieldValueMap中的 a 和 b 不为空时生成以下sql
@@ -241,12 +253,11 @@ public class TableRecordInfo {
 
     /**
      * 生成 delete sql
-     * @param conditionFields
      * @return
      */
-    public String convertToDeleteSql(String... conditionFields) {
+    public String convertToDeleteSql() {
         String baseSql = "delete from `" + this.tableName + "` where 1=1 ";
-        String conditionStatement = getConditionFromFieldValueMap(conditionFields);
+        String conditionStatement = getConditionFromFieldValueMap();
         if (StringUtils.isBlank(conditionStatement)) {
             return null;
         }

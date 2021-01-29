@@ -18,7 +18,7 @@ public class FileSize {
     private String parentDir;
     private String filePath;
     private String fileName;
-    private Integer fileSize;
+    private Long fileSize;
     private Integer isDir;
     private Integer scanTime;
 }

@@ -5,7 +5,7 @@ import json
 import time
 import hashlib
 from abc import ABCMeta, abstractmethod
-from multiprocessing import Pool, Manager
+from multiprocessing import Pool, Process, Manager
 from urllib.parse import urlsplit
 
 logging.basicConfig(level=logging.INFO)
@@ -34,6 +34,9 @@ class DownloadUtil(object):
         self.download_cache_path = download_cache_path
         m = Manager()
         self.__download_status_dict = m.dict()
+        requests.DEFAULT_RETRIES = 5
+        self.__session = requests.session()
+        self.__session.keep_alive = False
 
     def download(self, http_url: str, save_path: str, alias=None):
         # 创建缓存文件夹
@@ -80,6 +83,7 @@ class DownloadUtil(object):
         if cache_data['length'] != 0 and cache_data['index_byte'] >= cache_data['length']:
             # 下载完成
             cache_data['finish_time'] = int(time.time())
+            cache_data['status'] = 'finish'
             self.__write_cache(cache_path, cache_data)
             log.info("下载完成 " + http_url)
             return
@@ -93,28 +97,44 @@ class DownloadUtil(object):
         # 一次下载10k
         end_byte = start_byte + download_size * 1024
         range = 'bytes={start}-{end}'.format(start=start_byte, end=end_byte)
+        log.info("Request Range: " + range)
         headers = {"Range": range}
         now_time = time.time()
         try:
             # 设置每次下载耗时接近2秒
             req_time_util = 2000
             req_start_time = int(round(now_time * 1000))
-            response = requests.get(http_url, headers=headers)
+            try:
+                response = self.__session.get(http_url, headers=headers)
+            except Exception as e:
+                log.error(str(e))
+                log.error("下载出错, url: " + http_url)
+                cache_data['fail_num'] = cache_data['fail_num'] + 1
+                cache_data['status'] = 'fail'
+                cache_data['error_msg'] = repr(e)
+                self.__write_cache(cache_path, cache_data)
+                return
             # 计算下载需要的时间，适当提高下载速度。目前以2秒为一个下载区间
             req_end_time = int(round(time.time() * 1000))
             use_time = req_end_time - req_start_time
             # 根据响应头计算download_size
             #                         bytes 0-10/1560323
             response_content_range = response.headers['Content-Range']
-            
-            log.info("Content-Range: " + response_content_range)
+            log.info("Response Content-Range: " + response_content_range)
             file_length, rel_start_byte, rel_end_byte = self.__parse_content_range(response_content_range)
-            #                           bytes 0-10/1560323
+            #                           bytes 13412480-13412480/21390448
+            # 获取下载百分比
+            download_rate = (rel_end_byte / file_length) * 100
             cache_data['length'] = file_length
             log.info(http_url + ", download_size: " + str(download_size))
             log.info(http_url + ", download_use_time: " + str(use_time))
-            download_speed = int(((rel_end_byte - rel_start_byte) / 1000) / (use_time / 1000))
+            # 下载速度
+            download_speed = int(((rel_end_byte - rel_start_byte) / 1024) / (use_time / 1000))
+            # 剩余下载时间(单位秒)
+            download_remaining_time = int((file_length - rel_end_byte) / 1024 / download_speed)
             log.info("%s, download_speed: %d k/s" % (http_url, download_speed))
+            log.info("%s, download_rate: %.2f %%" % (http_url, download_rate))
+            log.info("%s, download_remaining_time: %d" % (http_url, download_remaining_time))
             if use_time < req_time_util:
                 # 提速
                 speed = req_time_util / use_time
@@ -123,8 +143,12 @@ class DownloadUtil(object):
                 # 降速
                 speed = use_time / req_time_util
                 download_size = int(download_size / speed)
+            # 这里有个bug，如果有一次download_size = 0 就永远就下载不了文件了
+            if download_size == 0:
+                log.info('%s, 下载速度为0, 重新调整下载熟读' % http_url)
+                download_size = 5
         except Exception as e:
-            print(e)
+            logging.exception(e)
             log.error('下载错误' + http_url)
             return
 
@@ -140,6 +164,7 @@ class DownloadUtil(object):
         # 更新缓存文件
         cache_data['index_byte'] = end_byte + 1
         cache_data['last_req_time'] = int(now_time)
+        cache_data['status'] = 'running'
         self.__write_cache(cache_path, cache_data)
         self.__download_file(cache_path, download_size)
 
@@ -152,7 +177,7 @@ class DownloadUtil(object):
         self.__download_status_dict[cache_path] = False
 
     def display_dict(self):
-        print(r"cache_dict", self.__download_status_dict)
+        log.info(r"cache_dict", self.__download_status_dict)
 
     def list_cache_file(self):
         """
@@ -185,7 +210,9 @@ class DownloadUtil(object):
                 "finish_time": 0,  # 下载完成使劲啊
                 "last_req_time": 0,  # 最后请求下载时间
                 "length": 0,  # 文件总大小单位byte
-                "mode": r"wb"  # python文件写入模式
+                "mode": r"wb",  # python文件写入模式
+                "fail_num": 0,
+                "status": "begin"
             }
             f.write(json.dumps(cache_data))
         return cache_file_path
@@ -228,7 +255,17 @@ class DownloadUtil(object):
 
 
 class WindowsChrome(BaseHttpClient):
-    def __init__(self, max_download_num: int = None, download_cache_path: str = r'.download_cache'):
+    def __init__(self, max_download_num: int = None, download_cache_path: str = r'.download_cache',
+                 is_enable_request_cache: bool = False, request_cache_path: str = r'.request_cache',
+                 request_cache_effective_time: int = 3600):
+        """
+        初始化浏览器
+        :param max_download_num: 最大下载进程数
+        :param download_cache_path: 断点续传缓存文件
+        :param is_enable_request_cache: 是否开启请求缓存
+        :param request_cache_path: 请求缓存文件路径
+        :param request_cache_effective_time: 请求缓存有效时间
+        """
         # windows google chrome http request header
         self.headers = {
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3551.3 Safari/537.36',
@@ -240,18 +277,28 @@ class WindowsChrome(BaseHttpClient):
         self.__download_status_dict = {}
         self.download_cache_path = download_cache_path
         self.download_util = DownloadUtil(download_cache_path)
+        self.is_enable_request_cache = is_enable_request_cache
+        self.request_cache_path = request_cache_path
+        self.request_cache_effective_time = request_cache_effective_time
 
     def init_session(self, url: str):
         requests.get(url, headers=self.headers)
         self.session = requests.session()
 
-    def get(self, url: str, encoding: str = None) -> str:
+    def get(self, url: str, encoding: str = None):
         """
         获取http请求response
         :param url: 请求url
         :param encoding: encoding:需要解析成指定的字符编码
         :return:
         """
+        # 读取缓存文件
+        if self.is_enable_request_cache:
+            cache_content = self.__get_cache(url)
+            if cache_content is not None:
+                if encoding is not None:
+                    cache_content = cache_content.decode(encoding=encoding)
+                return cache_content
         try:
             if self.session is None:
                 log.info("WindowsChrome requesting...")
@@ -262,6 +309,9 @@ class WindowsChrome(BaseHttpClient):
                 response = self.session.get(url, headers=self.headers)
                 log.info("WindowsChrome session request finish...")
             if response.status_code == 200:
+                if self.is_enable_request_cache and cache_content is None:
+                    self.__save_cache(url, response.content)
+                    # self.__save_cache(url, bytes(r'just say WDNMD', encoding='UTF-8'))
                 if encoding is not None:
                     # log.info('return encoding string')
                     return response.content.decode(encoding=encoding)
@@ -278,6 +328,27 @@ class WindowsChrome(BaseHttpClient):
 
     def post(self, url: str, data: dict, encoding=None):
         pass
+
+    def __get_cache(self, url: str) -> bytes:
+        cache_file = os.path.join(self.request_cache_path, md5(url))
+
+        if os.path.exists(cache_file):
+            now = time.time()
+            cache_create_time = os.path.getctime(cache_file)
+            # log.info("now %s, cache_create_time %s, diff %s", str(now), str(cache_create_time), str(now - cache_create_time))
+            if now - cache_create_time < self.request_cache_effective_time:
+                with open(cache_file, 'rb') as f:
+                    log.info('开始读取缓存文件, url：' + url + ", cache_file: " + cache_file)
+                    return f.read()
+
+    def __save_cache(self, url: str, content: bytes):
+        # 创建缓存文件夹
+        if not os.path.exists(self.request_cache_path):
+            os.makedirs(self.request_cache_path)
+        cache_file = os.path.join(self.request_cache_path, md5(url))
+        with open(cache_file, 'wb') as f:
+            log.info('开始写入缓存文件, url：' + url + ", cache_file: " + cache_file)
+            f.write(content)
 
     def download(self, http_url: str, save_path: str, alias=None, sync=False):
         """
@@ -333,22 +404,21 @@ class WindowsChrome(BaseHttpClient):
     def close(self, is_join: bool):
         """
         用户必须手动调用该方法
-        :param is_join: 是否等待子进程结束
+        :param is_join:
         :return:
         """
-        # 阻止其他任务提交到进程池
-        self.__download_pool.close()
         if is_join:
+            self.__download_pool.close()
             self.__download_pool.join()
-        else:
-            self.__download_pool.terminate()
 
     def test(self):
-        log.info('url=%s, statusCode=%s' % (r'url', r'response.status_code'))
+        log.info("fuck %s", r'you')
 
 
-def fuck_python(chrome: WindowsChrome):
-    print(chrome.download_cache_path)
+def md5(content):
+    md5 = hashlib.md5()
+    md5.update(content.encode(r"utf-8"))
+    return md5.hexdigest()
 
 
 if __name__ == '__main__':

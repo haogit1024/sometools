@@ -1,9 +1,8 @@
 package com.czh.util.orm;
 
 import com.czh.util.orm.entity.FileSize;
-import junit.framework.TestCase;
 
-public class TableRecordInfoTest extends TestCase {
+public class TableRecordInfoTest {
 
     public void testConvertToType() {
         FileSize fileSize = new FileSize();
@@ -11,13 +10,13 @@ public class TableRecordInfoTest extends TestCase {
                 .setParentDir("parentDir")
                 .setFilePath("filePath")
                 .setFileName("fileName")
-                .setFileSize(1)
+                .setFileSize(1L)
                 .setIsDir(1)
                 .setScanTime(1);
         TableRecordInfo tableRecordInfo = new TableRecordInfo(fileSize);
         System.out.println(tableRecordInfo.convertToSelectSql());
         System.out.println(tableRecordInfo.convertToInsertSql());
         System.out.println(tableRecordInfo.convertToUpdateSql("file_system", "parent_dir"));
-        System.out.println(tableRecordInfo.convertToDeleteSql("file_system", "parent_dir"));
+        System.out.println(tableRecordInfo.convertToDeleteSql());
     }
 }

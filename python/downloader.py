@@ -8,7 +8,7 @@ import json
 
 class Downloader(object):
     def __init__(self):
-        self.browser = WindowsChrome()
+        self.browser = WindowsChrome(is_enable_request_cache=True)
         self.download_dir = 'download_file'
 
     def __get_maven_version(self):
@@ -32,6 +32,13 @@ class Downloader(object):
     def download_maven(self):
         """
         下载maven
+        maven 阿里云配置
+        <mirror>
+          <id>nexus-aliyun</id>
+          <mirrorOf>central</mirrorOf>
+          <name>Nexus aliyun</name>
+          <url>http://maven.aliyun.com/nexus/content/groups/public</url>
+        </mirror>
         :return: maven压缩包地址
         """
         base_url = r'http://mirror.bit.edu.cn/apache/maven/maven-3/%s/binaries/apache-maven-%s-bin.tar.gz'
@@ -126,7 +133,8 @@ class Downloader(object):
             """
             print(res_json)
             json_dict = json.loads(res_json)
-            download_url = json_dict['TBA'][0]['downloads'][platform_system.lower]['link']
+            download_url = json_dict['TBA'][0]['downloads'][platform_system.lower()]['link']
+            print(download_url)
             file_name = download_url[download_url.rfind(r'/') + 1:]
             file_path = os.path.join(r'download_file', file_name)
             self.browser.download(download_url, file_path)
@@ -134,7 +142,7 @@ class Downloader(object):
         except Exception as e:
             logging.exception(e)
 
-    def donwload_adopt_open_jdk(self, version: str, type: str, platform_system: str):
+    def download_adopt_open_jdk(self, version: str, type: str, platform_system: str):
         """下载AdoptOpenJdk方法
 
         Args:
@@ -165,8 +173,6 @@ class Downloader(object):
             return file_path
         else:
             return None
-            
-        
 
     def close(self):
         """
@@ -178,6 +184,10 @@ class Downloader(object):
 if __name__ == '__main__':
     downloader = Downloader()
     # downloader.download_node('Linux')
-    # print(downloader.download_maven())
-    downloader.download_toolbox('Linux')
+    # downloader.download_node('Windows')
+    # downloader.download_maven()
+    # downloader.download_toolbox('linux')
+    # downloader.download_toolbox('Windows')
+    # downloader.download_adopt_open_jdk(r'8', r'jdk', r'Linux')
+    downloader.download_adopt_open_jdk(r'8', r'jdk', r'Windows')
     print('运行完成')

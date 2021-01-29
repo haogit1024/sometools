@@ -1,6 +1,5 @@
 package com.czh.util.orm;
 
-import com.czh.util.orm.entity.FileSize;
 import com.czh.util.util.PropertiesLoader;
 import org.apache.commons.lang3.StringUtils;
 
@@ -27,6 +26,10 @@ public class ORMDataBase {
     private String driver;
     private String url;
     private Connection connection;
+    private final int maxConnectionNum = 80;
+    private List<Connection> connectionList = new ArrayList<>(maxConnectionNum);
+    private int connListIndex = 0;
+    private boolean isPower = false;
 
     /**
      * 根据一个properties文件初始化，可以是resource的相对路径和绝对路径
@@ -110,9 +113,49 @@ public class ORMDataBase {
         return null;
     }
 
+    public boolean isPower() {
+        return isPower;
+    }
+
+    public synchronized void setPower(boolean power) {
+        if (power) {
+            // 开启性能模式，创建数据库连接池
+            for (int i = 0; i < maxConnectionNum; i++) {
+                this.connectionList.add(this.connect());
+            }
+        } else {
+            // 关闭性能模式，关闭连接池
+            this.connectionList.forEach((conn) -> {
+                try {
+                    if (conn != null && !conn.isClosed()) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+            connectionList = new ArrayList<>(maxConnectionNum);
+        }
+        isPower = power;
+    }
+
+    private synchronized Connection getConnection() {
+        Connection res;
+        if (isPower()) {
+            res = this.connectionList.get(connListIndex);
+            this.connListIndex++;
+            if (this.connListIndex == this.connectionList.size()) {
+                this.connListIndex = 0;
+            }
+        } else {
+            res = this.connection;
+        }
+        return res;
+    }
+
     private ResultSet executeQuerySql(String sql) {
         try {
-            PreparedStatement pst =  this.connection.prepareStatement(sql);
+            PreparedStatement pst =  this.getConnection().prepareStatement(sql);
             ResultSet set = pst.executeQuery();
             pst.close();
             return set;
@@ -126,9 +169,9 @@ public class ORMDataBase {
 
     private int executeUpdateSql(String sql) {
         try {
-            PreparedStatement pst =  this.connection.prepareStatement(sql);
+            PreparedStatement pst = this.getConnection().prepareStatement(sql);
             int ret = pst.executeUpdate();
-            pst.close();
+//            pst.close();
             return ret;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -138,12 +181,17 @@ public class ORMDataBase {
         }
     }
 
-    public <T> T selectOne(T t) throws SQLException {
+    public <T, R>Integer selectId(T t) throws SQLException {
         TableRecordInfo recordInfo = new TableRecordInfo(t);
         String sql = recordInfo.convertToSelectSql();
-        System.out.println("selectOne sql: " + sql);
         ResultSet resultSet = executeQuerySql(sql);
-        if (resultSet == null || !resultSet.next()) {
+        if (resultSet == null) {
+            return null;
+        }
+        if (resultSet.isClosed()) {
+            return null;
+        }
+        if (!resultSet.next()) {
             return null;
         }
         ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
@@ -153,7 +201,32 @@ public class ORMDataBase {
             map.put(resultSetMetaData.getColumnName(i), resultSet.getObject(i));
         }
         recordInfo.setFieldValueMap(map);
-        System.out.println(recordInfo);
+        resultSet.close();
+        Object idValue = map.get("id");
+        return idValue == null ? null : Integer.valueOf(idValue.toString());
+    }
+
+    public <T> T selectOne(T t) throws SQLException {
+        TableRecordInfo recordInfo = new TableRecordInfo(t);
+        String sql = recordInfo.convertToSelectSql();
+        ResultSet resultSet = executeQuerySql(sql);
+        if (resultSet == null) {
+            return null;
+        }
+        if (resultSet.isClosed()) {
+            return null;
+        }
+        if (!resultSet.next()) {
+            return null;
+        }
+        ResultSetMetaData resultSetMetaData = resultSet.getMetaData();
+        int columnCount = resultSetMetaData.getColumnCount();
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>(columnCount);
+        for (int i = 1; i <= columnCount; i++) {
+            map.put(resultSetMetaData.getColumnName(i), resultSet.getObject(i));
+        }
+        recordInfo.setFieldValueMap(map);
+        resultSet.close();
         return recordInfo.convertToType((Class<T>)t.getClass());
     }
 
@@ -178,6 +251,7 @@ public class ORMDataBase {
             info.setFieldValueMap(map);
             tableRecordInfoList.add(info);
         }
+        resultSet.close();
         return tableRecordInfoList.stream()
                 .map(tableRecordInfo -> tableRecordInfo.convertToType((Class<T>)t.getClass()))
                 .collect(Collectors.toList());
@@ -186,6 +260,7 @@ public class ORMDataBase {
     public <T>int insert(T t) {
         TableRecordInfo recordInfo = new TableRecordInfo(t);
         String sql = recordInfo.convertToInsertSql();
+//        System.out.println("insert sql: " + sql);
         return this.executeUpdateSql(sql);
     }
 
@@ -201,9 +276,9 @@ public class ORMDataBase {
         return this.executeUpdateSql(sql);
     }
 
-    public <T>int delete(T t, String... conditionField) {
+    public <T>int delete(T t) {
         TableRecordInfo recordInfo = new TableRecordInfo(t);
-        String sql = recordInfo.convertToDeleteSql(conditionField);
+        String sql = recordInfo.convertToDeleteSql();
         return this.executeUpdateSql(sql);
     }
 
@@ -220,6 +295,24 @@ public class ORMDataBase {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+        }
+        if (this.connectionList.size() > 0) {
+            this.connectionList.forEach(conn -> {
+                try {
+                    if (!conn.isClosed()) {
+                        conn.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
+
+    public void test() throws SQLException {
+        ResultSet set = getConnection().getMetaData().getCatalogs();
+        while (set.next()) {
+            System.out.println(set.getObject("TABLE_CAT"));
         }
     }
 }

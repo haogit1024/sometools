@@ -2,7 +2,7 @@ package com.czh.util.test;
 
 import com.czh.util.orm.entity.FileSize;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author czh
