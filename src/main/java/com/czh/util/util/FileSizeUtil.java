@@ -17,7 +17,7 @@ public class FileSizeUtil {
     private static final ORMDataBase orm = new ORMDataBase("mydb.properties");
     private static final String FILE_SYSTEM = "tc-win";
     private static final Integer SCAN_TIME = (int)(System.currentTimeMillis() / 1000);
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(2500);
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(600);
     private static int fileNum = 0;
     private static final boolean isSaveDb = true;
     private static final RedisUtil redisUtil = new RedisUtil("192.168.20.250", 6379);
