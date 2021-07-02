@@ -6,6 +6,33 @@ zip_path = r'/root/work_space/hxfw.zip'
 work_space_path = r'/root/work_space/unpark'
 
 
+def stop_tomcat(port: str):
+    prot_cmd = 'lsof -i:{}'.format(port)
+    print('prot_cmd: ' + prot_cmd)
+    cmd_ret = os.popen(prot_cmd)
+    lines = cmd_ret.readlines()
+    print("cmd_ret:")
+    print(lines)
+    lines_len = len(lines)
+    if lines_len == 2:
+        pid = __get_pid(lines[1])
+        kill_cmd = 'kill  ' + pid
+        print('kill_cmd: ' + kill_cmd)
+        # os.popen(kill_cmd)
+        subprocess.check_call(kill_cmd, shell=True)
+
+
+def __get_pid(line: str):
+    array = line.split(" ")
+    print(array)
+    index = 0
+    for item in array:
+        if item != "":
+            index = index + 1
+        if index == 2:
+            return item
+
+
 def unpark():
     shutil.rmtree(work_space_path)
     shutil.unpack_archive(zip_path, work_space_path)
@@ -24,5 +51,6 @@ def compile():
 
 
 if __name__ == '__main__':
+    stop_tomcat('8080')
     unpark()
     compile()
