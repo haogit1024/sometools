@@ -32,3 +32,5 @@ if __name__ == "__main__":
     # 47109/21390448
     print(47109/21390448)
     print('%s %%' % 'a')
+    work_home = r'D:\work_space\redis'
+    print(os.path.dirname(work_home))
