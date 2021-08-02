@@ -50,7 +50,7 @@ def compile():
     # print(admin_package_path)
     # shutil.copy(admin_package_path, r'/opt/tomcat/webapps')
     # subprocess.check_call('python3 restart_tomcat2.0.py 8080', cwd=r'/opt/tomcat/webapps', shell=True)
-    subprocess.check_call('mvn clean package -Plocal -Dmaven.test.skip=true', cwd=work_space_path, shell=True)
+    subprocess.check_call('/opt/maven/bin/mvn clean package -Plocal -Dmaven.test.skip=true', cwd=work_space_path, shell=True)
     package_path = os.path.join(work_space_path, 'admin-api', 'target', 'admin-api.war')
     shutil.copy(package_path, r'/opt/tomcat/webapps')
     subprocess.check_call('python3 restart_tomcat2.0.py 8080',

@@ -51,4 +51,7 @@ print('压缩包地址: ' + zip_path)
 subprocess.check_call('scp ./redis.zip root@1.15.223.154:/root/work_space/',
                       cwd=os.path.dirname(work_home),
                       shell=True)
+subprocess.check_call(r'ssh root@1.15.223.154 "python3 /opt/tomcat/webapps/redis_api_unpark.py"',
+                      cwd=os.path.dirname(work_home),
+                      shell=True)
 

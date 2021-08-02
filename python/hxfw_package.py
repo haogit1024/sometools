@@ -42,6 +42,9 @@ def move_to_work_space():
 def package_code_and_upload():
     shutil.make_archive(r'D:\work_space\hxfw', 'zip', r'D:\work_space\hxfw')
     subprocess.check_call('scp ./hxfw.zip root@1.15.223.154:/root/work_space/', cwd=r'D:\work_space', shell=True)
+    subprocess.check_call(r'ssh root@1.15.223.154 "python3 /opt/tomcat/webapps/hxfw_unpark.py"',
+                          cwd=os.path.dirname(r'D:\work_space'),
+                          shell=True)
 
 
 if __name__ == '__main__':
