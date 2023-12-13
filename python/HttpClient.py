@@ -236,7 +236,7 @@ class DownloadUtil(object):
         with open(cache_path, 'w') as f:
             f.write(json.dumps(cache_data))
 
-    def __parse_content_range(self, content_range: str) -> (int, int, int):
+    def __parse_content_range(self, content_range: str) -> (int):
         """
         解析http的Content-Range响应头
         :param content_range: bytes 0-10/1560323
