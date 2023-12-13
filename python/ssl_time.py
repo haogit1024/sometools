@@ -2,12 +2,13 @@ import re
 import subprocess
 from datetime import datetime
 import sys
-import json
 
 import requests
 
 """
-python3 python/ssl_time.py https://open.feishu.cn/open-apis/bot/v2/hook/27d0b283-a1f5-4bc2-afeb-d5cf0e481b27 api-test.danzhuqiyi.com teacher.danzhuqiyi.com api.danzhuqiyi.com
+python3 python/ssl_time.py https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxxxxxxxxxxxxxxxxxx aaa.com
+第一个参数是飞书的web_hook
+第二个以后得参数是域名列表
 """
 
 
@@ -63,9 +64,28 @@ if __name__ == "__main__":
     # print(feishu_webhook)
     # print(domains)
     content = ""
+    will_expire_domains = []
+    expire_domains = []
     for domain in domains:
         start_date, expire_date, expire_days = get_cert_info(domain)
         content = content + f'域名：{domain}\nSSL证书有效期：: {start_date} - {expire_date}\n有效期剩余天数：{expire_days}\n'
+        if expire_days < 0:
+            expire_domains.append(domain)
+        elif expire_days < 5:
+            will_expire_domains.append(domain)
+    if len(will_expire_domains) > 0:
+        content = content + "\n"
+        content = content + "以下域名将要过期，建议更换\n"
+        for domain in will_expire_domains:
+            content = content + domain + "，"
+        content = content[:-1]
+        content = content + "\n"
+    if len(expire_domains) > 0:
+        content = content + "\n"
+        content = content + "以下域名已过期，请尽快更换\n"
+        for domain in expire_domains:
+            content = content + domain + "，"
+        content = content[:-1]
     payload = {
         'msg_type': 'text',
         'content': {'text': content}
