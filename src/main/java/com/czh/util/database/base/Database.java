@@ -45,7 +45,7 @@ public class Database {
 	private static final int cpuCount = Runtime.getRuntime().availableProcessors();
 	/*=======性能模式下的线程数量=======*/
 	public static final int threadCount = cpuCount * 2;
-	/*=====性能模式下的数据库连接池=====*/
+	/*=====性能模式下的数据库连接池，Connection不是线程安全的，因此需要用连接池=====*/
     private List<Connection> connectionList = new ArrayList<>(threadCount);
 	/*=======数据库连接池索引=======*/
 	private int connListIndex = 0;
