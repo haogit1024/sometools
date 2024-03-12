@@ -1,9 +1,0 @@
-{
-    "http_url": "http://mirror.bit.edu.cn/apache/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz",
-    "save_path": "download_file/apache-maven-3.6.3-bin.tar.gz",
-    "index_byte": 12164103,
-    "finish_time": 1599451279,
-    "last_req_time": 1599451279,
-    "length": 9506321,
-    "mode": "ab"
-}
