@@ -1,11 +1,4 @@
-from downloader import Downloader
-import platform
-import os
-import shutil
-import tempfile
-import time
-import json
-import uuid
+import requests
 from HttpClient import WindowsChrome
 
 
@@ -23,14 +16,16 @@ def main():
         print(bytes.decode(f.read(), encoding='UTF-8'))
 
 
+def check_server(url: str) -> bool:
+    retry_amt = 10
+    while (retry_amt > 1):
+        response = requests.get(url)
+        http_code = response.status_code
+        if http_code == 200:
+            return True
+        retry_amt = retry_amt - 1
+    return False
+
+
 if __name__ == "__main__":
-    # main()
-    chrome = WindowsChrome(is_enable_request_cache=True)
-    # chrome.get(r'https://www.baidu.com')
-    # chrome.get(r'https://www.baidu.com')
-    print(platform.system())
-    # 47109/21390448
-    print(47109/21390448)
-    print('%s %%' % 'a')
-    work_home = r'D:\work_space\redis'
-    print(os.path.dirname(work_home))
+    print(check_server("http://localhost:8002/actuator"))
