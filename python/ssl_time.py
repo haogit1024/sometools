@@ -82,9 +82,11 @@ if __name__ == "__main__":
         for domain in fail_domains:
             content = content + domain + "，"
         content = content[:-1]
-    json = {
-        'msg_type': 'text',
-        'content': {'text': content}
-    }
-    headers = {'Content-Type': 'application/json'}
-    requests.post(url=feishu_webhook, headers=headers, json=json)
+    print(content)
+    if feishu_webhook is not None and feishu_webhook != '':
+        json = {
+            'msg_type': 'text',
+            'content': {'text': content}
+        }
+        headers = {'Content-Type': 'application/json'}
+        requests.post(url=feishu_webhook, headers=headers, json=json)
