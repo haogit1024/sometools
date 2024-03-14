@@ -2,13 +2,13 @@ import re
 import subprocess
 from datetime import datetime
 import sys
+import argparse
 
 import requests
 
 """
-python3 python/ssl_time.py https://open.feishu.cn/open-apis/bot/v2/hook/xxxxxxxxxxxxxxxxxxxxxxxx aaa.com
-第一个参数是飞书的web_hook
-第二个以后得参数是域名列表
+检查SSL证书是否过期脚本
+python3 -webhook http:xxxx -hosts xxx.com aaa.com bbb.com
 """
 
 
@@ -38,8 +38,14 @@ def get_cert_info(domain: str) -> tuple[datetime, datetime, int]:
 
 
 if __name__ == "__main__":
-    feishu_webhook = sys.argv[1]
-    domains = sys.argv[2:]
+    parse = argparse.ArgumentParser(
+        description=r'检查SSL证书是否过期',
+        prog=r'检查SSL证书是否过期脚本')
+    parse.add_argument('-webhook',type=str, help=r'飞书机器人webhook')
+    parse.add_argument('-hosts', type=str, nargs="*", help=r'不带协议的域名list表，支持多个')
+    args = parse.parse_args()
+    feishu_webhook = args.webhook
+    domains = args.hosts
     # print(feishu_webhook)
     # print(domains)
     content = "检查时间：" + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + "\n\n"
