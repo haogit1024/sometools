@@ -4,7 +4,7 @@
 """ 一个tomcat重启脚本，会删除缓存文件 """
 
 
-__author__ = 'chenzh'
+__author__ = "chenzh"
 
 import os, sys, platform, shutil
 
@@ -16,8 +16,8 @@ def delete_tomcat_cache(tomcat_home):
     # 用os的函数屏蔽系统差异
     # work_dir_cache_path = tomcat_home + r"\work\Catalina"
     # conf_dir_cache_path = tomcat_home + r"\conf\Catalina"
-    work_dir_cache_path = os.path.join(tomcat_home, 'work', 'Catalina')
-    conf_dir_cache_path = os.path.join(tomcat_home, 'conf', 'Catalina')
+    work_dir_cache_path = os.path.join(tomcat_home, "work", "Catalina")
+    conf_dir_cache_path = os.path.join(tomcat_home, "conf", "Catalina")
     if os.path.exists(work_dir_cache_path):
         shutil.rmtree(work_dir_cache_path)
     if os.path.exists(conf_dir_cache_path):
@@ -28,10 +28,10 @@ def stop_tomcat_script(tomcat_home, os_type):
     """
     run tomcat_home/bin/shutdown.bat / tomcat_home/bin/shutdown.sh
     """
-    cmd = ''
-    if os_type == 'Windows':
+    cmd = ""
+    if os_type == "Windows":
         cmd = tomcat_home + r"\bin\shutdown.bat"
-    elif os_type == 'Linux':
+    elif os_type == "Linux":
         cmd = tomcat_home + "/bin/shutdown.sh"
     # os.popen(cmd)
     os.system(cmd)
@@ -42,10 +42,10 @@ def start_tomcat_script(tomcat_home, os_type):
     """
     run tomcat_home/bin/startup.bat / tomcat_home/bin/startup.sh
     """
-    cmd = ''
-    if os_type == 'Windows':
-        cmd = tomcat_home + r'\bin\startup.bat'
-    elif os_type == 'Linux':
+    cmd = ""
+    if os_type == "Windows":
+        cmd = tomcat_home + r"\bin\startup.bat"
+    elif os_type == "Linux":
         cmd = tomcat_home + "/bin/startup.sh"
     # os.popen(cmd)
     os.system(cmd)
@@ -56,11 +56,11 @@ def start_tomcat_server(tomcat_server, os_type):
     """
     run net start server_name / service server_name start
     """
-    cmd = ''
-    if os_type == 'Windows':
-        cmd = 'net start {}'.format(tomcat_server)
-    elif os_type == 'Linux':
-        cmd = 'service {} start'.format(tomcat_server)
+    cmd = ""
+    if os_type == "Windows":
+        cmd = "net start {}".format(tomcat_server)
+    elif os_type == "Linux":
+        cmd = "service {} start".format(tomcat_server)
     print(cmd)
     os.system(cmd)
 
@@ -69,26 +69,26 @@ def stop_tomcat_server(tomcat_server, os_type):
     """
     run net stop server_name / service server_name stop
     """
-    cmd = ''
-    if os_type == 'Windows':
-        cmd = 'net stop {}'.format(tomcat_server)
-    elif os_type == 'Linux':
-        cmd = 'service {} stop'.format(tomcat_server)
+    cmd = ""
+    if os_type == "Windows":
+        cmd = "net stop {}".format(tomcat_server)
+    elif os_type == "Linux":
+        cmd = "service {} stop".format(tomcat_server)
     print(cmd)
     os.system(cmd)
 
 
 def delete_wabapp_cache(tomcat_home: str):
-    webapp_path = os.path.join(tomcat_home, r'webapps')
+    webapp_path = os.path.join(tomcat_home, r"webapps")
     war_file_list = []
     file_list = os.listdir(webapp_path)
     print(file_list)
     war_file_list = []
     if len(file_list) > 0:
         for f in file_list:
-            if r'.' in f:
-                file_section = f.split(r'.')
-                if file_section[1] == 'war':
+            if r"." in f:
+                file_section = f.split(r".")
+                if file_section[1] == "war":
                     war_file_list.append(file_section[0])
                     war_file_cache = os.path.join(webapp_path, file_section[0])
                     if os.path.exists(war_file_cache) and os.path.isdir(war_file_cache):
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     # 类型 1.脚本启动 2.服务启动, 默认是脚本启动
     tocmat_type = 1
     # tomcat服务名，默认为tomcat
-    tomcat_server_name = 'tomcat'
+    tomcat_server_name = "tomcat"
     # tomcat_home默认路径 默认脚本放在webapps目录下
     # 第一个参数为操作类型
     if args_length > 1:
@@ -118,9 +118,9 @@ if __name__ == "__main__":
         tomcat_server_name = sys.argv[3]
     # 获取操作系统类型 Windows / Linux
     os_type = platform.system()
-    print('os_type=', os_type)
-    if os_type != 'Windows' and os_type != 'Linux':
-        print('运行失败，目前只支持Windows和Linux操作系统')
+    print("os_type=", os_type)
+    if os_type != "Windows" and os_type != "Linux":
+        print("运行失败，目前只支持Windows和Linux操作系统")
         exit(0)
     # """
     if tocmat_type == 2:
