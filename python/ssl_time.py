@@ -10,6 +10,11 @@ import requests
 python3 -webhook http:xxxx -hosts xxx.com aaa.com bbb.com
 """
 
+# 全局hosts
+hosts = {
+    'jenkins.czhstudio.cn': '106.52.34.38'
+}
+
 
 def get_re_match_result(pattern: str, string: str) -> str:
     match = re.search(pattern, string)
@@ -26,6 +31,10 @@ def parse_time(date_str: str) -> datetime:
 
 def get_cert_info(domain: str) -> tuple[datetime, datetime, int]:
     cmd = f"curl -Ivs --connect-timeout 10 https://{domain}"
+    hosts_ip = hosts.get(domain)
+    if hosts_ip is not None:
+        # 模拟hosts
+        cmd = f'curl -Ivs --connect-to {hosts_ip}:443 https://{domain}'
     exitcode, output = subprocess.getstatusoutput(cmd)
     # print(f'exitcode={exitcode}')
     # 正则匹配
