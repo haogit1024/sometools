@@ -34,7 +34,8 @@ def get_cert_info(domain: str) -> tuple[datetime, datetime, int]:
     hosts_ip = hosts.get(domain)
     if hosts_ip is not None:
         # 模拟hosts
-        cmd = f'curl -Ivs --connect-to {hosts_ip}:443 https://{domain}'
+        cmd = f'curl -Ivs --resolve {domain}:443:{hosts_ip} https://{domain}'
+    print(f'cmd={cmd}')
     exitcode, output = subprocess.getstatusoutput(cmd)
     # print(f'exitcode={exitcode}')
     # 正则匹配
