@@ -1,0 +1,2 @@
+python3 ssl_time.py -hosts wq.danzhuqiyi.com web.danzhuqiyi.com mall-test.danzhuqiyi.com admin.danzhuqiyi.com \
+oss-prod.danzhuqiyi.com api.danzhuqiyi.com teacher.danzhuqiyi.com www.danzhuqiyi.com pubapi.danzhuqiyi.com mall.danzhuqiyi.com
