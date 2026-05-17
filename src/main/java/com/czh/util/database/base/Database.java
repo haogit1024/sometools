@@ -161,9 +161,9 @@ public class Database {
 		}
 		this.powerMode = powerMode;
 	}
-	
+
 	private synchronized Connection getConnection() {
-		Connection res; 
+		Connection res;
 		if (isPowerMode()) {
 			res = this.connectionList.get(connListIndex);
 			this.connListIndex++;
@@ -193,7 +193,7 @@ public class Database {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * 执行一条sql，并返回一个ResultSet结果集。符合开闭原则，新添加性能模式，不影响原来的使用
 	 * @param sql sql command
@@ -223,7 +223,7 @@ public class Database {
 		}
 		return tables;
 	}
-	
+
 	public int getAllCount() {
 		if (allCount == -1) {
 			int temp = 0;
@@ -255,7 +255,7 @@ public class Database {
 		}
 		return count;
 	}
-	
+
 	/**
 	 * 获取数据库名
 	 * @return 数据库名
